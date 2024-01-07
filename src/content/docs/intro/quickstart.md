@@ -72,4 +72,3 @@ _The BLUEDRAGON_DEFAULT_GAME environment variable tells the server to send playe
 
 - Learn more about [the `worlds` folder](/reference/worlds-folder).
 - Explore the code of [the example game](/intro/example-game/) and [create your own](/guides/creating-a-game/) from scratch.
--

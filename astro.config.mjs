@@ -1,6 +1,8 @@
 import starlight from "@astrojs/starlight";
 import { defineConfig } from "astro/config";
 
+import robotsTxt from "astro-robots-txt";
+
 // https://astro.build/config
 export default defineConfig({
   site: "https://developer.bluedragonmc.com/",
@@ -21,17 +23,24 @@ export default defineConfig({
       sidebar: [
         {
           label: "Introduction",
-          autogenerate: { directory: "intro" },
+          autogenerate: {
+            directory: "intro",
+          },
         },
         {
           label: "Guides",
-          autogenerate: { directory: "guides" },
+          autogenerate: {
+            directory: "guides",
+          },
         },
         {
           label: "Reference",
-          autogenerate: { directory: "reference" },
+          autogenerate: {
+            directory: "reference",
+          },
         },
       ],
     }),
+    robotsTxt(),
   ],
 });
