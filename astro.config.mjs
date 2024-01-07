@@ -1,6 +1,7 @@
 import starlight from "@astrojs/starlight";
 import { defineConfig } from "astro/config";
 
+import createFaviconsIntegration from "astro-favicons";
 import robotsTxt from "astro-robots-txt";
 
 // https://astro.build/config
@@ -42,5 +43,11 @@ export default defineConfig({
       ],
     }),
     robotsTxt(),
+    createFaviconsIntegration({
+      appName: "BlueDragon Docs",
+      appShortName: "BlueDragon",
+      masterPicture: "./src/assets/logo.png",
+      path: "./favicons/",
+    }),
   ],
 });
