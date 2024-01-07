@@ -68,6 +68,32 @@ BLUEDRAGON_DEFAULT_GAME=ExampleGame java -jar server.jar
 
 _The BLUEDRAGON_DEFAULT_GAME environment variable tells the server to send players into the ExampleGame instead of looking for a game called `Lobby`_
 
+8. _(Optional)_ Give yourself permissions:
+
+By default, LuckPerms does not grant any permissions. To fix this, run the following command:
+
+```sh
+docker run --rm -it -e LUCKPERMS_STORAGE_METHOD=mongodb -e LUCKPERMS_DATA_MONGODB_CONNECTION_URI="mongodb://localhost:27017/" -e LUCKPERMS_DATA_DATABASE=luckperms --net host ghcr.io/luckperms/rest-api
+```
+
+This creates a terminal where you can run LuckPerms commands in a session connected directly to the database.
+Then, in that terminal, run the following command:
+
+```
+lp group default permission set * true
+```
+
+If you want to be less permissive, you can give permissions to yourself:
+
+```
+lp user YOURNAME permission set * true
+```
+
+See [LuckPerms's documentation](https://luckperms.net/wiki/Command-Usage) for more information on permissions.
+
+Once you're done, press `CTRL + C` to close the terminal.
+Finally, restart your server and existing LuckPerms container to see the changes take effect.
+
 ## Further Reading
 
 - Learn more about [the `worlds` folder](/reference/worlds-folder).
