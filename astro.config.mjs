@@ -21,6 +21,7 @@ export default defineConfig({
         github: "https://github.com/BlueDragonMC",
         discord: "https://bluedragonmc.com/discord",
       },
+      lastUpdated: true,
       sidebar: [
         {
           label: "Introduction",
