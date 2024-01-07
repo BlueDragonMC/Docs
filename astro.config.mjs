@@ -15,12 +15,12 @@ export default defineConfig({
         baseUrl: "https://github.com/BlueDragonMC/Docs/edit/main/",
       },
       social: {
-        github: "https://github.com/BlueDragonMC/",
+        github: "https://github.com/BlueDragonMC",
         discord: "https://bluedragonmc.com/discord",
       },
       sidebar: [
         {
-          label: "Start Here",
+          label: "Introduction",
           autogenerate: { directory: "intro" },
         },
         {

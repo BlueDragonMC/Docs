@@ -1,0 +1,28 @@
+---
+title: Example Game
+description: Explore the code of BlueDragon's example game and use it to build your own.
+---
+
+import { LinkCard } from "@astrojs/starlight/components";
+
+<LinkCard
+  title="Example Game GitHub Repository"
+  description="Click here to explore the code of our sample game."
+  href="https://github.com/BlueDragonMC/ExampleGame"
+/>
+
+Exploring the example game is the best way to get started with BlueDragon software.
+This guide will break down the [main class](https://github.com/BlueDragonMC/ExampleGame/blob/main/src/main/kotlin/com/bluedragonmc/games/examplegame/ExampleGame.kt)
+and the necessary [configuration file](https://github.com/BlueDragonMC/ExampleGame/blob/main/src/main/resources/game.properties).
+
+## Configuration File
+
+```properties
+# The game.properties file defines the game's main class (which extends com.bluedragonmc.server.Game)
+# It is used by the plugin loader to determine which class to instantiate when a game is requested.
+# The name is also used to populate menus and command completion.
+name=ExampleGame
+main-class=com.bluedragonmc.games.examplegame.ExampleGame
+```
+
+## Main Class
