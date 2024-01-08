@@ -22,6 +22,9 @@ export default defineConfig({
         discord: "https://bluedragonmc.com/discord",
       },
       lastUpdated: true,
+      tableOfContents: {
+        maxHeadingLevel: 4,
+      },
       sidebar: [
         {
           label: "Introduction",

@@ -25,4 +25,168 @@ name=ExampleGame
 main-class=com.bluedragonmc.games.examplegame.ExampleGame
 ```
 
-## Main Class
+This file must be named `game.properties` and be placed in the root of the compiled JAR file.
+Only one game can be registered per JAR. If you wish to combine multiple games into one project, we recommend using [Gradle subprojects](https://docs.gradle.org/current/userguide/multi_project_builds.html).
+
+## Anatomy of the Main Class
+
+There are only two requirements for a game's main class:
+
+- It must inherit `com.bluedragonmc.server.Game`
+- It must override the `initialize` method
+
+Here is an example main class from our ExampleGame project:
+
+```kotlin
+class ExampleGame(mapName: String) : Game(name = "ExampleGame", mapName = mapName) {
+
+    override fun initialize() {
+        use(VoidDeathModule(threshold = 0.0))
+        use(CountdownModule(threshold = 2, countdownSeconds = 5))
+        use(MyModule()) { myModuleInstance ->
+            myModuleInstance.sayHello()
+        }
+        use(WinModule())
+        use(AnvilFileMapProviderModule(Paths.get("worlds/$name/$mapName")))
+        use(SharedInstanceModule())
+
+        handleEvent<PlayerChatEvent> { event ->
+            event.player.exp += 10
+        }
+    }
+
+    @DependsOn(WinModule::class)
+    class MyModule : GameModule() {
+
+        override fun initialize(parent: Game, eventNode: EventNode<Event>) {
+            eventNode.addListener(PlayerSpawnEvent::class.java) { event ->
+                event.player.sendMessage(Component.text("Hello, world!", NamedTextColor.AQUA))
+            }
+            
+            eventNode.addListener(PlayerStartSneakingEvent::class.java) { event ->
+                parent.getModule<WinModule>().declareWinner(event.player)
+            }
+        }
+
+        fun sayHello() {
+            logger.info("Hello, world!")
+        }
+
+        override fun deinitialize() { }
+    }
+}
+```
+
+## Let's break this down!
+
+### The class declaration:
+```kotlin
+class ExampleGame(mapName: String) 
+  : Game(name = "ExampleGame", mapName = mapName) {
+```
+
+Every game needs to extend BlueDragon's `Game` class.
+When overriding the constructor, we recommend keeping the game name (the `name` constructor parameter) constant.
+
+Your constructor is called in different ways depending on the number of parameters it accepts:
+
+| # of Parameters Accepted | Roles of Constructor Parameters |
+| ------------------------ | ------------------------------- |
+| 0                        | Called with no parameters.      |
+| 1                        | Map name                        |
+| 2                        | Map name, Game mode             |
+
+*This logic can be found [here](https://github.com/BlueDragonMC/Server/blob/0f15339656e3755447afcd05bad50d9408399d86/src/main/kotlin/com/bluedragonmc/server/queue/GameLoader.kt#L62-L66).*
+
+The game mode can be any arbitrary string. The Game implementation can use the game mode string to change various game mechanics.
+
+### The `initialize` method
+
+```kotlin
+override fun initialize() {
+        use(VoidDeathModule(threshold = 0.0))
+        use(CountdownModule(threshold = 2, countdownSeconds = 5))
+        ...
+}
+```
+
+The `initialize` method is the time to use game modules. In this example, we're using the [VoidDeathModule](/reference/game-modules/voiddeathmodule) and the [CountdownModule](/reference/game-modules/countdownmodule).
+
+Each module should have a [single purpose](https://en.wikipedia.org/wiki/Single_responsibility_principle) and ideally shouldn't contain much code.
+They are designed to be easy to use in many games without much adjustment.
+
+### The module registration callback
+
+```kotlin
+use(MyModule()) { myModuleInstance ->
+  myModuleInstance.sayHello()
+}
+```
+
+If a module has dependencies, calling `use` may not initialize it right away.
+Trying to get an instance of a module immediately after usage is not considered safe, since the module
+may be waiting for its dependencies to load (and therefore hasn't registered itself yet).
+
+Instead, use the callback option in the second parameter of the `use` method.
+When the module is registered, the instance of the module will be passed to the callback.
+
+You can register additional modules in this callback as well, and callbacks can be nested multiple times if necessary.
+
+### Loading maps
+
+```kotlin
+use(AnvilFileMapProviderModule(Paths.get("worlds/$name/$mapName")))
+use(SharedInstanceModule())
+```
+
+Loading maps, just like everything else, is delegated to a module.
+
+- The [AnvilFileMapProviderModule](/reference/game-modules/anvilfilemapprovidermodule/) loads the map into an [InstanceContainer](https://wiki.minestom.net/world/instances#instancecontainer) and prevents loading the map multiple times into memory.
+- The [SharedInstanceModule](/reference/game-modules/sharedinstancemodule/) uses the `InstanceContainer` created in the `AnvilFileMapProviderModule` to create [SharedInstance](https://wiki.minestom.net/world/instances#sharedinstance)s with the same world content. This allows the map to only be loaded once while keeping players and entities separated.
+
+### Creating a game module
+
+```kotlin
+@DependsOn(WinModule::class)
+class MyModule : GameModule() {
+
+    override fun initialize(parent: Game, eventNode: EventNode<Event>) {
+        eventNode.addListener(PlayerSpawnEvent::class.java) { event ->
+            event.player.sendMessage(Component.text("Hello, world!", NamedTextColor.AQUA))
+        }
+        
+        eventNode.addListener(PlayerStartSneakingEvent::class.java) { event ->
+            parent.getModule<WinModule>().declareWinner(event.player)
+        }
+    }
+
+    override fun deinitialize() { }
+}
+```
+
+You can create your own modules by extending the GameModule class and overriding the `initialize` and `deinitialize` methods.
+
+#### Module Dependencies
+
+Dependencies are specified with the `DependsOn` and `SoftDependsOn` annotations.
+If a module lists a dependency, that dependency will be registered before the dependent module is registered.
+
+However, for soft dependencies, if the dependency is not registered by the time `initialize` is fully invoked, the module will be registered instead of throwing an exception.
+
+#### Scoped Event Nodes
+
+Every module gets its own EventNode, which is scoped to the game. All events that pass through this EventNode must be related to a player in the game, an instance that this game owns, or the game itself.
+
+_The only exception to this is the ServerTickMonitorEvent. See [the source code](https://github.com/BlueDragonMC/Server/blob/b05b09ad229ccf85da20130510c9c1cdf90bbeed/common/src/main/kotlin/com/bluedragonmc/server/Game.kt#L93-L100) for details._
+
+#### Unregistering Modules
+
+When a module is unregistered (typically after the game ends), each of its modules get unregistered.
+At this point, the module's `deinitialize` method will be invoked.
+This is one final time to do any cleanup, like closing file handles or database connections or reverting any non-scoped changes.
+
+## Further Reading
+
+- Get started with the BlueDragon codebase using our [quickstart guide](/intro/quickstart).
+- Learn more about our [project structure](/intro/project-structure).
+- Read the source code of the [Game class](https://github.com/BlueDragonMC/Server/blob/main/common/src/main/kotlin/com/bluedragonmc/server/Game.kt) or the [module resolution system](https://github.com/BlueDragonMC/Server/blob/main/common/src/main/kotlin/com/bluedragonmc/server/ModuleHolder.kt).
