@@ -3,6 +3,7 @@ import { defineConfig } from "astro/config";
 
 import createFaviconsIntegration from "astro-favicons";
 import robotsTxt from "astro-robots-txt";
+import starlightLinksValidator from "starlight-links-validator";
 
 // https://astro.build/config
 export default defineConfig({
@@ -45,6 +46,12 @@ export default defineConfig({
           },
         },
       ],
+      plugins: [
+        starlightLinksValidator({
+          errorOnRelativeLinks: false,
+        }),
+      ],
+      customCss: ["./src/styles/custom.css"],
     }),
     robotsTxt(),
     createFaviconsIntegration({

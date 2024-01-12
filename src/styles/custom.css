@@ -1,0 +1,4 @@
+/* See https://github.com/withastro/starlight/issues/1321 */
+.sl-markdown-content :is(th, td):not(:where(.not-content *)) > code {
+  overflow-wrap: normal;
+}

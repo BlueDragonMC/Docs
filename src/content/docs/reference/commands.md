@@ -1,7 +1,7 @@
 ---
 title: Server Commands
 ---
-Just like in vanilla Minecraft, the [BlueDragonMC/Server](/reference/subprojects/server-core/) Minestom instance relies on commands for important interactions. Each command has its own permission, and **no permissions are granted by default**. This document references a few different permission levels, but these are for illustrative purposes only, and do not represent specific requirements.
+Just like in vanilla Minecraft, the [BlueDragonMC/Server](https://github.com/BlueDragonMC/Server) Minestom instance relies on commands for important interactions. Each command has its own permission, and **no permissions are granted by default**. This document references a few different permission levels, but these are for illustrative purposes only, and do not represent specific requirements.
 
 ## Selectors
 Just like on vanilla servers, BlueDragon supports the use of the following selectors in place of player names:
