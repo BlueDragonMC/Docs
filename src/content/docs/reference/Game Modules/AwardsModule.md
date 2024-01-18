@@ -20,4 +20,4 @@ getModule<AwardsModule>().awardCoins(player, amount, reason);
 ```
 
 ### Award for Winning
-The [WinModule](../winmodule/) has a feature to automatically award coins at the end of a game. You still need to use `AwardsModule` for this feature to work.
+The [WinModule](../winmodule/#coin-awards) has a feature to automatically award coins at the end of a game. You still need to use `AwardsModule` for this feature to work.
