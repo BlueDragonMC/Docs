@@ -1,5 +1,5 @@
 ---
-title: MongoDB
+title: MongoDB Data Structure
 ---
 
 We use [MongoDB](https://www.mongodb.com/docs/) to store player profiles and permissions.

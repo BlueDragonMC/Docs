@@ -1,0 +1,545 @@
+---
+slug: deployment/kubernetes
+title: Deploying with Kubernetes
+---
+
+:::caution[Under Construction]
+This page is under construction and may not be complete yet.
+If you run into any issues, please [open an issue](https://github.com/BlueDragonMC/Docs/issues)
+or contact us on [Discord](https://bluedragonmc.com/discord).
+:::
+
+This guide will show you how to deploy BlueDragon using Kubernetes.
+
+:::note
+Kubernetes is the recommended way to deploy BlueDragon in a production environment. With a Kubernetes deployment, you will have [Agones](https://agones.dev/), which allows you to perform rolling game server updates without kicking players, and [Puffin](https://github.com/BlueDragonMC/Puffin), which coordinates with your game servers and ensures that an appropriate number of games are running at all times.
+:::
+
+## Prerequisites
+
+- A running Kubernetes cluster (v1.26+)
+- [Helm](https://helm.sh/) v3+ installed and configured
+- [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/) installed and configured
+
+:::tip
+The easiest way to run a local development cluster is [`minikube`](https://minikube.sigs.k8s.io).
+In a production environment, we recommend [`microk8s`](https://microk8s.io/).
+:::
+
+## Container Registry
+
+Before running any BlueDragon images, you need to push them to your own container registry.
+
+### On Microk8s
+
+If you're using `microk8s`, you can install the built-in registry with `microk8s enable registry`.
+Your base registry URL will be the IP address of your cluster on port `32000`. You may also be able to use `localhost`.
+For more information, see the [registry plugin documentation](https://microk8s.io/docs/registry-built-in).
+
+### On Minikube
+
+If you're using `minikube`, see their [official documentation](https://minikube.sigs.k8s.io/docs/handbook/registry/) on registries.
+
+### Outside the Cluster
+
+You can also create a registry outside of your cluster and configure it for use within the cluster.
+For more information, see [the official documentation](https://docs.docker.com/registry/).
+
+## Install Agones
+
+When running on Kubernetes, BlueDragon uses [Agones](https://agones.dev/) to orchestrate game servers. To [install Agones](https://agones.dev/site/docs/installation/install-agones/), run the following commands:
+
+```sh
+kubectl create namespace agones-system
+kubectl apply --server-side -f https://raw.githubusercontent.com/googleforgames/agones/release-1.38.0/install/yaml/install.yaml
+```
+
+You can also install it via [Helm](https://helm.sh/) by running:
+
+```sh
+helm repo add agones https://agones.dev/chart/stable
+helm repo update
+helm install agones --namespace agones-system --create-namespace agones/agones
+```
+
+## Deploy MongoDB
+
+There are many ways to deploy MongoDB on Kubernetes. In production, we recommend using the MongoDB Community Operator, which can be installed via [Helm](https://helm.sh/) by running:
+
+```sh
+helm repo add mongodb https://mongodb.github.io/helm-charts
+helm repo update
+helm install community-operator mongodb/community-operator
+```
+
+Then, you can create a MongoDB `ReplicaSet` by applying some YAML to your cluster in the `default` namespace:
+
+```yaml
+apiVersion: mongodbcommunity.mongodb.com/v1
+kind: MongoDBCommunity
+metadata:
+  name: mongodb-instance
+spec:
+  members: 1
+  type: ReplicaSet
+  version: "6.0.5"
+  security:
+    authentication:
+      modes: ["SCRAM"]
+  users:
+    - name: bluedragon
+      db: admin
+      passwordSecretRef:
+        name: mongodb-bluedragon-password
+      roles:
+        - name: readWrite
+          db: bluedragon
+        - name: readWrite
+          db: luckperms
+      scramCredentialsSecretName: bluedragon
+  additionalMongodConfig:
+    storage.wiredTiger.engineConfig.journalCompressor: zlib
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mongodb-bluedragon-password
+type: Opaque
+stringData:
+  password: <your MongoDB password>
+```
+
+Replace `<your MongoDB password>` with the password you want to use for your MongoDB user. Then, save the file and apply it to your cluster.
+
+After a few minutes, the operator should create a secret in the default namespace called `mongodb-instance-admin-bluedragon`. It will contain a key called `connectionString.standard`, which other services will use to connect.
+
+## Deploy LuckPerms
+
+Create a Deployment and a Service for LuckPerms:
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: luckperms
+spec:
+  selector:
+    matchLabels:
+      app: luckperms
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: luckperms
+    spec:
+      containers:
+        - name: luckperms
+          image: ghcr.io/luckperms/rest-api
+          env:
+            - name: LUCKPERMS_STORAGE_METHOD
+              value: "mongodb"
+            - name: LUCKPERMS_DATA_MONGODB_CONNECTION_URI
+              valueFrom:
+                # Populate the environment variable using the MongoDB operator's autogenerated secret
+                secretKeyRef:
+                  name: mongodb-instance-admin-bluedragon
+                  key: connectionString.standard
+                  optional: false
+            - name: LUCKPERMS_DATA_DATABASE
+              value: "luckperms"
+            - name: LUCKPERMS_SYNC_MINUTES
+              value: "5"
+          resources:
+            requests:
+              cpu: 128m
+              memory: 128Mi
+            limits:
+              cpu: 256m
+              memory: 256Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: luckperms # This name is used for DNS lookups in other pods
+  labels:
+    name: luckperms
+spec:
+  selector:
+    app: luckperms
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+```
+
+Apply this file to your cluster to deploy LuckPerms in the `default` namespace under the hostname `luckperms`.
+
+:::note[Giving Yourself Permissions]
+To give yourself permissions, you can run the following command:
+
+```sh
+kubectl run luckperms-temp --env=LUCKPERMS_STORAGE_METHOD=mongodb --env=LUCKPERMS_DATA_DATABASE=luckperms --env="LUCKPERMS_DATA_MONGODB_CONNECTION_URI=$(kubectl get secret mongodb-instance-admin-bluedragon -o jsonpath="{.data.connectionString\.standard}" | base64 -d)" --rm -it --image=ghcr.io/luckperms/rest-api:latest
+```
+
+Once the LuckPerms container starts, run the following command:
+
+```
+lp user <your username> permission set * true
+```
+
+This gives you all permissions. Then, exit the container by pressing `Ctrl+C` and then run:
+
+```
+kubectl rollout restart deployment luckperms
+```
+
+This will restart the existing LuckPerms pod, forcing it to pick up your new permissions.
+:::
+
+## Deploy Puffin
+
+:::tip[Required Files]
+This Puffin deployment requires a folder on the host machine located at `/data/worlds`.
+This folder should contain one folder per game, and each of those should contain one folder per world.
+For more information, see the [Worlds Folder](/reference/worlds-folder/) guide.
+:::
+
+Apply this manifest to your cluster to install Puffin and give it the necessary permissions to watch Kubernetes and Agones resources:
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: puffin
+spec:
+  selector:
+    matchLabels:
+      app: puffin
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: puffin
+    spec:
+      # This ServiceAccount is used to allow Puffin to use the Kubernetes API for certain resources
+      serviceAccountName: puffin-service-account
+      containers:
+        - name: puffin
+          image: <your registry url>/bluedragonmc/puffin:latest
+          env:
+            - name: PUFFIN_WORLD_FOLDER
+              value: /puffin/worlds
+            - name: PUFFIN_MONGO_CONNECTION_STRING
+              valueFrom:
+                # Populate the environment variable using the MongoDB operator's autogenerated secret
+                secretKeyRef:
+                  name: mongodb-instance-admin-bluedragon
+                  key: connectionString.standard
+                  optional: false
+          volumeMounts:
+            - name: worlds-volume
+              mountPath: /puffin/worlds
+            - name: config-volume
+              mountPath: /service/config
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: 128m
+            limits:
+              memory: "1024Mi"
+              cpu: "1000m"
+      volumes:
+        - name: worlds-volume
+          hostPath:
+            path: /data/worlds/
+            type: Directory
+        - name: config-volume
+          configMap:
+            name: buffer-config
+            items:
+              - key: buffer-config.properties
+                path: buffer-config.properties
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: puffin # This name is used for DNS lookups in other pods
+  labels:
+    name: puffin
+spec:
+  selector:
+    app: puffin
+  ports:
+    - protocol: TCP
+      name: grpc
+      port: 50051
+      targetPort: 50051
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: puffin-service-account
+---
+# Allow Puffin to get, list, and watch pods and Agones resources
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: puffin-cluster-role
+  labels:
+    app: puffin
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - "agones.dev"
+    resources:
+      - gameservers
+      - fleets
+    verbs:
+      - get
+      - list
+      - watch
+---
+# Bind the ClusterRole to the ServiceAccount that the Puffin Deployment uses
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: puffin-cluster-role-binding
+roleRef:
+  kind: ClusterRole
+  name: puffin-cluster-role
+  apiGroup: rbac.authorization.k8s.io
+subjects:
+  - kind: ServiceAccount
+    name: puffin-service-account
+---
+# `buffer-config.properties` defines Puffin's desired state of running games.
+# See the Buffer Config guide for more information.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: buffer-config
+data:
+  buffer-config.properties: |
+    # Defines the required "buffer" of instances for each game type, map name, and mode.
+    # For keys: <game type>_<map name>_<mode>
+    # <mode> is optional. If it's not included, the last _ should also be omitted.
+    # For values:
+    # - Each term can consist of a number and one optional operator prefixing it
+    # - Valid operators include:
+    #   - "+" takes the current amount of joinable servers and adds the following quantity to it
+    #   - "/" takes the current amount of logged in players and divides it by the following quantity (and adds one)
+    #   - A plain number will result in that number of instances.
+    # - Examples:
+    #   - "/25" makes one server for every 25 players, rounding down: floor(n / 25), where n is the current number of players
+    #   - "+1" keeps one additional server as a "buffer" if all other servers are full.
+    #   - "+3" keeps a buffer of 3 servers. This means that, at most times, there will be 3 joinable game servers of this type.
+    #   - "/25 +5" creates 1 server for every 25 players, plus a buffer of 5 servers that must be joinable.
+    # - Plain numbers and the "/" operator are not influenced by the status of each server (whether there are any empty slots).
+    ArenaPvP_Quad=1
+    # ^ Keep 1 server for ArenaPvP, plus one for every 10 players
+    BedWars_Caves=+1
+    FastFall_Chaos=+2
+    Infection_Office=+1
+    Infinijump_Classic_Solo=+2
+    Infinijump_Classic_Versus=+2
+    Infinijump_Classic_Race=+1
+    Lobby_lobbyv2.2=/25 +2
+    # ^ Keep 2 lobbies with empty player slots as well as one for every 25 players
+```
+
+Modify the buffer config according to [this guide](/reference/buffer-config), replace `<your registry url>` with your Docker registry, and apply the YAML to your cluster.
+
+## Deploy Velocity Proxy
+
+:::note[Forwarding Secret]
+Before deploying Velocity, you will need a forwarding secret. You can randomly generate one using the following command:
+
+```sh
+kubectl create secret generic proxy-forwarding-secret --from-literal=secret=$(openssl rand -hex 48)
+```
+
+If you don't have OpenSSL installed, you can generate a random one using a service like [this one](https://generate-secret.vercel.app/48).
+:::
+
+:::tip[Required Files]
+This proxy deployment requires the following files to be present on the host machine:
+
+- `/data/songs` - Contains `.nbs` files for the Jukebox
+
+:::
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: proxy
+spec:
+  selector:
+    matchLabels:
+      app: proxy
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: proxy
+    spec:
+      containers:
+        - name: proxy
+          image: <your registry url>/bluedragonmc/komodo:latest
+          ports:
+            - containerPort: 25565
+          volumeMounts:
+            - name: config-volume
+              mountPath: /proxy/config/
+            - name: songs-volume
+              mountPath: /proxy/plugins/bluedragon-jukebox/songs/
+          env:
+            - name: PUFFIN_VELOCITY_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: proxy-forwarding-secret
+                  key: secret
+                  optional: false
+            - name: LUCKPERMS_STORAGE_METHOD
+              value: "mongodb"
+            - name: LUCKPERMS_DATA_MONGODB_CONNECTION_URI
+              valueFrom:
+                secretKeyRef:
+                  name: mongodb-instance-admin-bluedragon
+                  key: connectionString.standard
+                  optional: false
+            - name: LUCKPERMS_DATA_DATABASE
+              value: "luckperms"
+      volumes:
+        - name: config-volume
+          configMap:
+            name: proxy-config
+            items:
+              - key: proxy-config.properties
+                path: proxy-config.properties
+        - name: songs-volume
+          hostPath:
+            path: /data/songs/
+            type: Directory
+---
+# This NodePort exposes the proxy to the internet on port 30000.
+# If you are using a cloud provider or MetalLB, the NodePort can
+# be switched out for a LoadBalancer.
+apiVersion: v1
+kind: Service
+metadata:
+  name: proxy # This name is used for DNS lookups in other pods
+spec:
+  type: NodePort
+  selector:
+    app: proxy
+  ports:
+    - protocol: TCP
+      port: 25565
+      targetPort: 25565
+      nodePort: 30000
+---
+# This ConfigMap is mounted into the proxy pod at /proxy/config/proxy-config.properties
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: proxy-config
+data:
+  proxy-config.properties: |
+    motd.line_1.text=<bold><gradient:#4EB2F4:#3336f4>BlueDragon</gradient></bold> <gray>[<green>1.20.1<gray>]
+    motd.line_1.center=true
+    motd.line_2.text=
+    motd.line_2.center=true
+```
+
+Replace `<your registry url>` with your Docker registry, and apply the YAML to your cluster.
+
+## Deploy Minecraft Server Fleet
+
+```yaml
+apiVersion: "agones.dev/v1"
+kind: Fleet
+metadata:
+  name: server
+spec:
+  replicas: 2
+  template:
+    spec:
+      ports:
+        - name: minecraft
+          containerPort: 25565
+          protocol: TCP
+      health:
+        disabled: false
+        initialDelaySeconds: 30
+        periodSeconds: 5
+        failureThreshold: 5
+      template:
+        spec:
+          containers:
+            - name: server
+              # This image should be based on bluedragonmc/server,
+              # but should also include your minigame JARs.
+              image: <your registry url>/bluedragonmc/server:latest
+              env:
+                - name: PUFFIN_VELOCITY_SECRET
+                  valueFrom:
+                    secretKeyRef:
+                      name: proxy-forwarding-secret
+                      key: secret
+                      optional: false
+                - name: BLUEDRAGON_MONGO_CONNECTION_STRING
+                  valueFrom:
+                    secretKeyRef:
+                      name: mongodb-instance-admin-bluedragon
+                      key: connectionString.standard
+                      optional: false
+              resources:
+                requests:
+                  memory: "1024Mi"
+                  # Agones takes 30m for its sidecar container, so in total, the pod requests 1/2 of a CPU.
+                  cpu: "470m"
+                limits:
+                  memory: "1024Mi"
+                  cpu: "2000m"
+              volumeMounts:
+                - name: worlds-volume
+                  mountPath: /server/worlds
+              ports:
+                - name: grpc
+                  containerPort: 50051
+                  protocol: TCP
+          volumes:
+            - name: worlds-volume
+              hostPath:
+                path: /data/worlds/
+                type: Directory
+```
+
+Replace `<your registry url>` with your Docker registry, and apply the YAML to your cluster.
+
+You can scale the Fleet of game servers by running:
+
+```sh
+kubectl scale fleet server --replicas=10 # 10 is the number of game server instances you want to run
+```
+
+## That's It!
+
+Congratulations, you've successfully deployed BlueDragon on Kubernetes!
+
+You should be able to connect to the server on port `30000`.
+If the port is not forwarded, then you can temporarily use `kubectl` as a proxy:
+
+```sh
+kubectl port-forward svc/proxy 30000:30000
+```
+
+Then, connect to the server on `localhost:30000`.

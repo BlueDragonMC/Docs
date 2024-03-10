@@ -20,6 +20,7 @@ If the `BLUEDRAGON_ENV_TYPE` is not set, the fallback is to check for a director
 | `BLUEDRAGON_LUCKPERMS_HOSTNAME` | **Dev**: `http://localhost:8080`<br>**Prod**: `http://luckperms:8080` | The hostname that resolves to a [standalone LuckPerms](https://luckperms.net/) instance                            |
 | `BLUEDRAGON_DEFAULT_GAME`       | `lobby`                                                               | The game to automatically create on startup. Typically used to immediately initialize a lobby on each game server. |
 | `BLUEDRAGON_AGONES_DISABLED`    | _Not set_                                                             | If this environment variable is present with any value, Agones integration will be disabled.                       |
+| `PUFFIN_VELOCITY_SECRET`        | _Not set_                                                             | The Velocity modern forwarding secret. If not present, Velocity forwarding is disabled.                            |
 
 _[View ConfiguredEnvironment source code](https://github.com/BlueDragonMC/Server/blob/b05b09ad229ccf85da20130510c9c1cdf90bbeed/src/main/kotlin/com/bluedragonmc/server/queue/environments.kt#L23) for more details about server environment configuration._
 

@@ -40,9 +40,21 @@ export default defineConfig({
           },
         },
         {
+          label: "Game Modules",
+          autogenerate: {
+            directory: "modules",
+          },
+        },
+        {
           label: "Reference",
           autogenerate: {
             directory: "reference",
+          },
+        },
+        {
+          label: "Deployment",
+          autogenerate: {
+            directory: "deployment",
           },
         },
       ],

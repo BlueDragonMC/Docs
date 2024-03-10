@@ -79,7 +79,7 @@ class ExampleGame(mapName: String) : Game(name = "ExampleGame", mapName = mapNam
 
 ## Let's break this down!
 
-### The class declaration:
+### The class declaration
 ```kotlin
 class ExampleGame(mapName: String) 
   : Game(name = "ExampleGame", mapName = mapName) {
@@ -110,7 +110,7 @@ override fun initialize() {
 }
 ```
 
-The `initialize` method is the time to use game modules. In this example, we're using the [VoidDeathModule](/reference/game-modules/voiddeathmodule) and the [CountdownModule](/reference/game-modules/countdownmodule).
+The `initialize` method is the time to use game modules. In this example, we're using the [VoidDeathModule](/modules/voiddeathmodule) and the [CountdownModule](/modules/countdownmodule).
 
 Each module should have a [single purpose](https://en.wikipedia.org/wiki/Single_responsibility_principle) and ideally shouldn't contain much code.
 They are designed to be easy to use in many games without much adjustment.
@@ -141,8 +141,8 @@ use(SharedInstanceModule())
 
 Loading maps, just like everything else, is delegated to a module.
 
-- The [AnvilFileMapProviderModule](/reference/game-modules/anvilfilemapprovidermodule/) loads the map into an [InstanceContainer](https://wiki.minestom.net/world/instances#instancecontainer) and prevents loading the map multiple times into memory.
-- The [SharedInstanceModule](/reference/game-modules/sharedinstancemodule/) uses the `InstanceContainer` created in the `AnvilFileMapProviderModule` to create [SharedInstance](https://wiki.minestom.net/world/instances#sharedinstance)s with the same world content. This allows the map to only be loaded once while keeping players and entities separated.
+- The [AnvilFileMapProviderModule](/modules/anvilfilemapprovidermodule/) loads the map into an [InstanceContainer](https://wiki.minestom.net/world/instances#instancecontainer) and prevents loading the map multiple times into memory.
+- The [SharedInstanceModule](/modules/sharedinstancemodule/) uses the `InstanceContainer` created in the `AnvilFileMapProviderModule` to create [SharedInstance](https://wiki.minestom.net/world/instances#sharedinstance)s with the same world content. This allows the map to only be loaded once while keeping players and entities separated.
 
 ### Creating a game module
 
