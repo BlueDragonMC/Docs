@@ -94,7 +94,7 @@ docker build -t bluedragonmc/server:latest .
 docker run \
   -v /data/worlds:/data/worlds \
   -e BLUEDRAGON_QUEUE_TYPE=IPC \
-  -e BLUEDRAGON_MONGO_HOSTNAME=mongo:27017 \
+  -e BLUEDRAGON_MONGO_CONNECTION_STRING=mongodb://mongo:27017 \
   -e BLUEDRAGON_PUFFIN_HOSTNAME=puffin \
   -e BLUEDRAGON_LUCKPERMS_HOSTNAME=http://luckperms:8080 \
   -e BLUEDRAGON_DEFAULT_GAME=lobby \

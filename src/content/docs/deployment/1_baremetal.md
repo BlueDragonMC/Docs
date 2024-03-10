@@ -168,7 +168,7 @@ Here is an example:
 
 ```properties
 BLUEDRAGON_QUEUE_TYPE=IPC
-BLUEDRAGON_MONGO_HOSTNAME=localhost:27017
+BLUEDRAGON_MONGO_CONNECTION_STRING=mongodb://localhost:27017
 BLUEDRAGON_PUFFIN_HOSTNAME=localhost
 BLUEDRAGON_LUCKPERMS_HOSTNAME=http://localhost:8080
 BLUEDRAGON_DEFAULT_GAME=lobby # This should correspond a game name found in the `game.properties` file in one of your games.
