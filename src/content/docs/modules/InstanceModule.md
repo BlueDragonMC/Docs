@@ -4,9 +4,9 @@ title: InstanceModule
 `InstanceModule` is an abstract module that supplies [instances](/intro/games-servers-instances/#instances) to the game. It cannot be used by itself, but BlueDragon includes several implementations.
 
 ## Implementations
-- [SharedInstanceModule](../sharedinstancemodule/)
-- [InstanceContainerModule](../instancecontainermodule/)
-- [CustomGeneratorInstanceModule](../customgeneratorinstancemodule/)
+- [SharedInstanceModule](../sharedinstancemodule/): Ideal for games that use Anvil world files and do not allow changes to the map during gameplay.
+- [InstanceContainerModule](../instancecontainermodule/): Ideal for games that use Anvil world files and allow changes to the map during gameplay.
+- [CustomGeneratorInstanceModule](../customgeneratorinstancemodule/): Ideal for games that with custom, dynamic world generation.
 
 ## Public Methods
 ### `getRequiredInstances`
