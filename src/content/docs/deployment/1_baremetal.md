@@ -115,8 +115,7 @@ Puffin reads the following configuration from environment variables:
 ```properties
 PUFFIN_DEV_MODE=true # Disable Kubernetes service discovery for Minecraft servers and proxies
 PUFFIN_WORLD_FOLDER=/data/worlds
-PUFFIN_MONGO_HOSTNAME=localhost
-PUFFIN_MONGO_PORT=27017
+PUFFIN_MONGO_CONNECTION_STRING=mongodb://localhost:27017
 PUFFIN_LUCKPERMS_URL=http://localhost:8080
 PUFFIN_DEFAULT_GAMESERVER_IP=localhost
 PUFFIN_DEFAULT_PROXY_IP=localhost

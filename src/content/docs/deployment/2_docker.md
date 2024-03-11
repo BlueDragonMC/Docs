@@ -65,8 +65,7 @@ docker run -d \
   -v buffer-config.properties:/service/config/buffer-config.properties \
   -e PUFFIN_DEV_MODE=true \
   -e PUFFIN_WORLD_FOLDER=/data/worlds \
-  -e PUFFIN_MONGO_HOSTNAME=mongo \
-  -e PUFFIN_MONGO_PORT=27017 \
+  -e PUFFIN_MONGO_CONNECTION_STRING=mongodb://mongo:27017 \
   -e PUFFIN_LUCKPERMS_URL=http://luckperms:8080 \
   -e PUFFIN_DEFAULT_GAMESERVER_IP=minecraft \
   -e PUFFIN_DEFAULT_PROXY_IP=proxy \
