@@ -13,14 +13,16 @@ If the `BLUEDRAGON_ENV_TYPE` is not set, the fallback is to check for a director
 ## Environment Variable Reference
 
 | Environment variable                 | Defaults                                                                  | Description                                                                                                        |
-| ------------------------------------ | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| ------------------------------------ | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ | --------------------------------- |
 | `BLUEDRAGON_QUEUE_TYPE`              | **Dev**: `TEST`<br>**Prod**: `IPC`                                        | Use "IPC" to connect to Puffin for queueing, or "TEST" for a fully-local/single-instance queue                     |
 | `BLUEDRAGON_MONGO_CONNECTION_STRING` | **Dev**: `mongodb://localhost:27017`<br>**Prod**: `mongodb://mongo:27017` | The hostname that resolves to a MongoDB instance                                                                   |
 | `BLUEDRAGON_PUFFIN_HOSTNAME`         | **Dev**: `localhost`<br>**Prod**: `puffin`                                | The hostname that resolves to a Puffin instance                                                                    |
+| `BLUEDRAGON_PUFFIN_PORT`             | 50051                                                                     | 50051                                                                                                              | The port of Puffin's gRPC server. |
 | `BLUEDRAGON_LUCKPERMS_HOSTNAME`      | **Dev**: `http://localhost:8080`<br>**Prod**: `http://luckperms:8080`     | The hostname that resolves to a [standalone LuckPerms](https://luckperms.net/) instance                            |
 | `BLUEDRAGON_DEFAULT_GAME`            | `lobby`                                                                   | The game to automatically create on startup. Typically used to immediately initialize a lobby on each game server. |
 | `BLUEDRAGON_AGONES_DISABLED`         | _Not set_                                                                 | If this environment variable is present with any value, Agones integration will be disabled.                       |
 | `PUFFIN_VELOCITY_SECRET`             | _Not set_                                                                 | The Velocity modern forwarding secret. If not present, Velocity forwarding is disabled.                            |
+| `BLUEDRAGON_GRPC_SERVER_PORT`        | 50051                                                                     | The port to listen on for gRPC requests.                                                                           |
 
 _[View ConfiguredEnvironment source code](https://github.com/BlueDragonMC/Server/blob/b05b09ad229ccf85da20130510c9c1cdf90bbeed/src/main/kotlin/com/bluedragonmc/server/queue/environments.kt#L23) for more details about server environment configuration._
 

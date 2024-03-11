@@ -15,12 +15,6 @@ This guide will walk you through the process of installing and running BlueDrago
 Running BlueDragon on baremetal is the simplest way to run BlueDragon software, but it's recommended that you use Docker or Kubernetes for production deployments.
 :::
 
-:::danger
-This guide currently **will not work** because Komodo and Puffin run gRPC servers on the same port (50051), and Komodo connects to Puffin at a hardcoded hostname (`puffin`).
-
-This should be fixed soon, but in the meantime, we recommend using the Docker or Kubernetes deployment guides.
-:::
-
 ## Prerequisites
 
 - This guide assumes you're running on Linux. Other operating systems are not supported; though, you may be able to get it working on WSL.
@@ -119,6 +113,9 @@ PUFFIN_MONGO_CONNECTION_STRING=mongodb://localhost:27017
 PUFFIN_LUCKPERMS_URL=http://localhost:8080
 PUFFIN_DEFAULT_GAMESERVER_IP=localhost
 PUFFIN_DEFAULT_PROXY_IP=localhost
+PUFFIN_GRPC_PORT=50051
+PUFFIN_GAMESERVER_GRPC_PORT=50052
+PUFFIN_PROXY_GRPC_PORT=50053
 
 # The amount of milliseconds in between minimum instance checks
 PUFFIN_INSTANCE_START_PERIOD_MS=5000
@@ -136,6 +133,13 @@ Running Puffin outside of a Docker container is not recommended. If you run into
 :::
 
 ### Proxy
+
+First, configure environment variables:
+
+```properties
+KOMODO_PUFFIN_URI=localhost:50051 # Connect to Puffin on port 50051
+KOMODO_GRPC_PORT=50053 # Create a gRPC server on port 50053
+```
 
 Komodo (the Velocity proxy plugin) reads the following configuration files:
 
@@ -169,11 +173,13 @@ Here is an example:
 BLUEDRAGON_QUEUE_TYPE=IPC
 BLUEDRAGON_MONGO_CONNECTION_STRING=mongodb://localhost:27017
 BLUEDRAGON_PUFFIN_HOSTNAME=localhost
+BLUEDRAGON_PUFFIN_PORT=50051 # The port that Puffin's gRPC server runs on
 BLUEDRAGON_LUCKPERMS_HOSTNAME=http://localhost:8080
 BLUEDRAGON_DEFAULT_GAME=lobby # This should correspond a game name found in the `game.properties` file in one of your games.
 BLUEDRAGON_AGONES_DISABLED=true # Agones is disabled without Kubernetes
 HOSTNAME=server-1 # This is the internal name of the Minecraft server. It is used to identify the server to other services, like Velocity and Puffin.
 PUFFIN_VELOCITY_SECRET=<your velocity secret> # Add your Velocity forwarding secret here
+BLUEDRAGON_GRPC_SERVER_PORT=50052 # The port used to create a gRPC server
 ```
 
 ### LuckPerms
