@@ -3,8 +3,8 @@ title: Development Environment Setup
 description: How to work on BlueDragon in development mode
 ---
 
-## Limitations
-
-Working in development mode means that you cannot use or test any features that rely on messaging, like parties and matchmaking.
-
-## Setup
+:::caution[Under Construction]
+This page is under construction and may not be complete yet.
+If you run into any issues, please [open an issue](https://github.com/BlueDragonMC/Docs/issues)
+or contact us on [Discord](https://bluedragonmc.com/discord).
+:::
