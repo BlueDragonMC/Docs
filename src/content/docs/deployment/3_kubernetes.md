@@ -463,6 +463,11 @@ Replace `<your registry url>` with your Docker registry, and apply the YAML to y
 
 ## Deploy Minecraft Server Fleet
 
+:::note
+This configuration assumes that your games are copied in to your container image.
+For more information, see [this guide](/deployment/building-images).
+:::
+
 ```yaml
 apiVersion: "agones.dev/v1"
 kind: Fleet

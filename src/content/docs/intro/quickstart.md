@@ -7,7 +7,7 @@ sidebar:
 
 ## Requirements
 
-1. You must have Java 17 or later installed.
+1. You must have Java 21 or later installed.
 2. This guide assumes you're using a Bash-like shell. Use Linux for best results; on Windows, you can modify the scripts or use [WSL](https://learn.microsoft.com/en-us/windows/wsl/).
 3. [Docker](https://docs.docker.com/desktop/) is recommended to quickly run the required MongoDB and LuckPerms services.
 

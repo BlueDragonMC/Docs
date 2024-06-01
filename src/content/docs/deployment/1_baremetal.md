@@ -18,7 +18,7 @@ Running BlueDragon on baremetal is the simplest way to run BlueDragon software, 
 ## Prerequisites
 
 - This guide assumes you're running on Linux. Other operating systems are not supported; though, you may be able to get it working on WSL.
-- You must have Java 17 or later installed on your system and accessible in your `PATH`.
+- You must have Java 21 or later installed on your system and accessible in your `PATH`.
 
 ## Installation
 

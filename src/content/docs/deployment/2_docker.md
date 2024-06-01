@@ -40,8 +40,14 @@ You should be able to see the songs by typing `/play` in-game.
 ### MongoDB
 
 ```sh
-docker run -d -p 27017:27017 mongo
+docker run -d -p 27017:27017 -v bluedragon_mongo_data:/data/db mongo
 ```
+
+:::caution
+This Docker command runs MongoDB without a password. In production, we recommend using the [MongoDB Community Kubernetes Operator](https://github.com/mongodb/mongodb-kubernetes-operator), which automatically creates credentials and stored them in a Secret.
+
+At the very minimum, make sure port `27017` on your machine is not accessible from an external network.
+:::
 
 ### LuckPerms
 
@@ -86,12 +92,18 @@ docker run -d \
 
 ### Minecraft Server
 
+:::note
+This command expects your minigames to be located in a directory called `games` inside your current working directory.
+You can also [bake them into your image](/deployment/building-images) to make it more portable.
+:::
+
 ```sh
 git clone https://github.com/BlueDragonMC/Server
 cd Server
 docker build -t bluedragonmc/server:latest .
 docker run \
   -v /data/worlds:/data/worlds \
+  -v ./games:/server/games \
   -e BLUEDRAGON_QUEUE_TYPE=IPC \
   -e BLUEDRAGON_MONGO_CONNECTION_STRING=mongodb://mongo:27017 \
   -e BLUEDRAGON_PUFFIN_HOSTNAME=puffin \
