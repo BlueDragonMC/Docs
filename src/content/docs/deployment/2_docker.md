@@ -37,10 +37,20 @@ You should be able to see the songs by typing `/play` in-game.
 
 ## Running
 
+### Creating a network
+
+Before you start up any containers, you need to create a Docker network to allow containers to communicate with MongoDB without exposing all their ports to the host (i.e. with `--net host`).
+
+```sh
+docker network create bluedragon-network
+```
+
+When starting containers, we will use the `--network` option to add them to this network.
+
 ### MongoDB
 
 ```sh
-docker run -d -p 27017:27017 -v bluedragon_mongo_data:/data/db mongo
+docker run -d -p 27017:27017 -v bluedragon_mongo_data:/data/db --net bluedragon-network --network-alias mongo mongo
 ```
 
 :::caution
@@ -57,7 +67,8 @@ docker run -d \
   -e LUCKPERMS_STORAGE_METHOD=mongodb \
   -e LUCKPERMS_DATA_MONGODB_CONNECTION_URI="mongodb://mongo:27017/" \
   -e LUCKPERMS_DATA_DATABASE=luckperms \
-  --net host ghcr.io/luckperms/rest-api
+  --net bluedragon-network \
+  ghcr.io/luckperms/rest-api
 ```
 
 ### Puffin
@@ -75,6 +86,7 @@ docker run -d \
   -e PUFFIN_LUCKPERMS_URL=http://luckperms:8080 \
   -e PUFFIN_DEFAULT_GAMESERVER_IP=minecraft \
   -e PUFFIN_DEFAULT_PROXY_IP=proxy \
+  --net bluedragon-network \
   bluedragonmc/puffin:latest
 ```
 
@@ -87,6 +99,7 @@ docker build -t bluedragonmc/komodo:latest .
 docker run -d \
   -v /data/songs:/proxy/plugins/bluedragon-jukebox/songs/ \
   -e PUFFIN_VELOCITY_SECRET=<your velocity secret> \
+  --net bluedragon-network \
   bluedragonmc/komodo:latest
 ```
 
@@ -111,6 +124,7 @@ docker run \
   -e BLUEDRAGON_DEFAULT_GAME=lobby \
   -e BLUEDRAGON_AGONES_DISABLED=true \
   -e PUFFIN_VELOCITY_SECRET=<your velocity secret> \
+  --net bluedragon-network \
   bluedragonmc/server:latest
 ```
 
