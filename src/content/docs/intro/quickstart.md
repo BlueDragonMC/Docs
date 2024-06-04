@@ -13,88 +13,64 @@ sidebar:
 
 ## Setup
 
-1. Clone the `Server` and `ExampleGame` repositories:
+1. Clone the Quickstart and Server repositories:
 
-```sh
-git clone https://github.com/BlueDragonMC/Server
-git clone https://github.com/BlueDragonMC/ExampleGame
-```
+   ```bash
+   git clone https://github.com/BlueDragonMC/Quickstart
+   git clone https://github.com/BlueDragonMC/Server
+   ```
 
-2. Build the `Server` project:
+2. Install and start MongoDB and LuckPerms
 
-```sh
-cd Server
-./gradlew build
-```
+   ```bash
+   docker run -d -p 27017:27017 mongo
+   docker run -d -p 8080:8080 ghcr.io/luckperms/rest-api
+   ```
 
-3. Build the example game:
+3. Give yourself permissions:
 
-```sh
-cd ../ExampleGame
-./gradlew build
-```
+   By default, LuckPerms does not grant any permissions. To fix this, run the following command:
 
-4. Copy the JARs into their appropriate places:
+   ```sh
+   docker run --rm -it -e LUCKPERMS_STORAGE_METHOD=mongodb -e LUCKPERMS_DATA_MONGODB_CONNECTION_URI="mongodb://localhost:27017/" -e LUCKPERMS_DATA_DATABASE=luckperms --net host ghcr.io/luckperms/rest-api
+   ```
 
-```sh
-cd ..
-mkdir -p ./run/games
-cp Server/build/libs/Server-1.0-SNAPSHOT-all.jar run/server.jar
-cp ExampleGame/build/libs/ExampleGame-1.0-SNAPSHOT.jar run/games/ExampleGame.jar
-```
+   This creates a terminal where you can run LuckPerms commands in a session connected directly to the database.
+   Then, in that terminal, run the following command:
 
-5. Copy a world folder:
+   ```
+   lp group default permission set * true
+   ```
 
-_You will need a Minecraft world that was saved on the same version as BlueDragon's Minestom dependency. At the time of writing, this is 1.20.1._
+   If you want to be less permissive, you can give permissions to yourself:
 
-```sh
-mkdir -p ./run/worlds
-cp YOUR_WORLD_FOLDER run/worlds/ExampleGame/ExampleMap
-```
+   ```
+   lp user YOURNAME permission set * true
+   ```
 
-6. Run dependencies:
+   See [LuckPerms's documentation](https://luckperms.net/wiki/Command-Usage) for more information on permissions.
 
-```sh
-docker run -d -p 27017:27017 mongo
-docker run -d -p 8080:8080 ghcr.io/luckperms/rest-api
-```
+   Once you're done, press `CTRL + C` to close the terminal.
+   Finally, restart your existing LuckPerms container to see the changes take effect.
 
-7. Start the server:
+   ```bash
+   docker restart $(docker ps -q --filter ancestor=ghcr.io/luckperms/rest-api)
+   ```
 
-```sh
-cd ./run
-BLUEDRAGON_DEFAULT_GAME=ExampleGame java -jar server.jar
-```
+4. Run the server:
 
-_The BLUEDRAGON_DEFAULT_GAME environment variable tells the server to send players into the ExampleGame instead of looking for a game called `Lobby`_
+   - If you are using IntelliJ, use the run configuration called "Run development server"
+   - If not, run the following command in the root of your project:
+     ```bash
+     ./gradlew runDev
+     ```
 
-8. _(Optional)_ Give yourself permissions:
+   This will build the core Server project, the Lobby, and the example minigame, copy them into
+   their appropriate locations, and then run the Server with the games installed.
 
-By default, LuckPerms does not grant any permissions. To fix this, run the following command:
-
-```sh
-docker run --rm -it -e LUCKPERMS_STORAGE_METHOD=mongodb -e LUCKPERMS_DATA_MONGODB_CONNECTION_URI="mongodb://localhost:27017/" -e LUCKPERMS_DATA_DATABASE=luckperms --net host ghcr.io/luckperms/rest-api
-```
-
-This creates a terminal where you can run LuckPerms commands in a session connected directly to the database.
-Then, in that terminal, run the following command:
-
-```
-lp group default permission set * true
-```
-
-If you want to be less permissive, you can give permissions to yourself:
-
-```
-lp user YOURNAME permission set * true
-```
-
-See [LuckPerms's documentation](https://luckperms.net/wiki/Command-Usage) for more information on permissions.
-
-Once you're done, press `CTRL + C` to close the terminal.
-Finally, restart your server and existing LuckPerms container to see the changes take effect.
+5. Join the server. It should appear as a LAN world, but if not, the IP address will be `localhost`.
 
 ## Further Reading
 
 - Learn more about [the `worlds` folder](/reference/worlds-folder).
-- Explore the code of [the example game](/intro/example-game/) and [create your own](/guides/creating-a-game/) from scratch.
+- Explore the code of [the Quickstart project](https://github.com/BlueDragonMC/Quickstart/) and [create your own game](/guides/creating-a-game/).
