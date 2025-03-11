@@ -2,8 +2,20 @@
 title: InstanceTimeModule
 ---
 
-:::caution[Under Construction]
-This page is under construction and may not be complete yet.
-If you run into any issues, please [open an issue](https://github.com/BlueDragonMC/Docs/issues)
-or contact us on [Discord](https://bluedragonmc.com/discord).
-:::
+`InstanceTimeModule` sets the time of day in each instance that belongs to the parent Game. The time is loaded from the [configuration](../configmodule), with a default value in case the time was not specified in the config.
+
+## Dependencies
+This module depends on the following modules:
+- [ConfigModule](../configmodule/)
+
+## Usage
+Import the module:
+```kotlin
+import com.bluedragonmc.server.module.instance.InstanceTimeModule
+```
+Use the module in your game's `initialize` function:
+```kotlin
+use(InstanceTimeModule(default = 12000))
+```
+
+Now, the time will be locked to the value of the configuration node `world.time`, or `12000` if the value is not set.
