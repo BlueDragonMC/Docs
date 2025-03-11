@@ -2,8 +2,14 @@
 title: InstantRespawnModule
 ---
 
-:::caution[Under Construction]
-This page is under construction and may not be complete yet.
-If you run into any issues, please [open an issue](https://github.com/BlueDragonMC/Docs/issues)
-or contact us on [Discord](https://bluedragonmc.com/discord).
-:::
+`InstantRespawnModule` automatically respawns players after they die. The module cannot be configured in any way. The player's respawn position is obtained from a PlayerRespawnEvent (if you use [SpawnpointModule](../spawnpointmodule), the player will respawn at their designated spawnpoint).
+
+## Usage
+Import the module:
+```kotlin
+import com.bluedragonmc.server.module.gameplay.InstantRespawnModule
+```
+Use the module in your game's `initialize` function:
+```kotlin
+use(InstantRespawnModule())
+```
