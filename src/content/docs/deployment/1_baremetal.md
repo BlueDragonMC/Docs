@@ -49,11 +49,12 @@ cd /work/Komodo && ./gradlew build
 Then, copy the JARs into the appropriate directories:
 
 ```sh
-mkdir -p /run/server
+mkdir -p /data/worlds
+mkdir -p /data/songs
 mkdir -p /run/proxy/plugins
 mkdir /run/puffin
 
-cp /work/Server/build/libs/Server-1.0-SNAPSHOT-all.jar /run/server/server.jar
+cp /work/Server/build/libs/Server-1.0-SNAPSHOT-all.jar /data/server.jar
 cp /work/Komodo/build/libs/Komodo-0.1.0-all.jar /run/proxy/plugins/komodo.jar
 cp /work/Puffin/build/libs/Puffin-1.0-SNAPSHOT-all.jar /run/puffin/puffin.jar
 ```
@@ -61,18 +62,10 @@ cp /work/Puffin/build/libs/Puffin-1.0-SNAPSHOT-all.jar /run/puffin/puffin.jar
 Download Velocity:
 
 ```sh
-wget https://api.papermc.io/v2/projects/velocity/versions/3.3.0-SNAPSHOT/builds/370/downloads/velocity-3.3.0-SNAPSHOT-370.jar -O /run/proxy/velocity.jar
+wget https://api.papermc.io/v2/projects/velocity/versions/3.4.0-SNAPSHOT/builds/483/downloads/velocity-3.3.0-SNAPSHOT-370.jar -O /run/proxy/velocity.jar
 ```
 
-Install some plugins for your Velocity proxy:
-
-```sh
-wget https://download.luckperms.net/1526/velocity/LuckPerms-Velocity-5.4.113.jar -O /run/proxy/plugins/luckperms.jar
-wget https://ci.exceptionflug.de/job/Protocolize2/lastSuccessfulBuild/artifact/protocolize-velocity/target/protocolize-velocity.jar -O /run/proxy/plugins/protocolize.jar
-wget https://github.com/BlueDragonMC/Jukebox/releases/download/latest/Jukebox-1.0-SNAPSHOT-all.jar -O /run/proxy/plugins/jukebox.jar
-```
-
-Then, build your games as JAR files and place them in the `/run/server/games` directory. For more details on this, see [Creating a Game](/guides/creating-a-game) or the [Example Game](/intro/example-game).
+Then, build your games as JAR files and place them in the `/data/games` directory. For more details on this, see [Creating a Game](/guides/creating-a-game) or the [Example Game](/intro/example-game).
 
 ### Dependencies
 
@@ -158,7 +151,7 @@ Komodo (the Velocity proxy plugin) reads the following configuration files:
 
 In addition, you must create a `forwarding.secret` file in the `/run/proxy` folder with your forwarding secret.
 
-To play note block songs, add `.nbs` files created with [Note Block Studio](https://opennbs.org/) to the `/run/proxy/plugins/bluedragon-jukebox/songs` directory.
+To play note block songs, add `.nbs` files created with [Note Block Studio](https://opennbs.org/) to the `/data/songs` directory.
 You should be able to see the songs by typing `/play` in-game.
 
 Finally, change the port that Velocity runs on since `25565` is taken by the Minecraft server. You can do this by starting up Velocity (`cd /run/proxy && java -jar velocity.jar`) and letting it create a `velocity.toml` file. Then, change the `bind` property. Players will connect to your server using this address.
@@ -211,8 +204,8 @@ Minecraft server:
 
 ```sh
 # Before running, you must export the necessary environment variables from the Configuration section of this guide!
-cd /run/server/
-java -jar /run/server/server.jar
+cd /data
+java -jar /data/server.jar
 ```
 
 Velocity proxy:

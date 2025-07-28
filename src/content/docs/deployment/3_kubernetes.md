@@ -398,8 +398,6 @@ spec:
           volumeMounts:
             - name: config-volume
               mountPath: /proxy/config/
-            - name: songs-volume
-              mountPath: /proxy/plugins/bluedragon-jukebox/songs/
           env:
             - name: PUFFIN_VELOCITY_SECRET
               valueFrom:
@@ -424,10 +422,6 @@ spec:
             items:
               - key: proxy-config.properties
                 path: proxy-config.properties
-        - name: songs-volume
-          hostPath:
-            path: /data/songs/
-            type: Directory
 ---
 # This NodePort exposes the proxy to the internet on port 30000.
 # If you are using a cloud provider or MetalLB, the NodePort can
@@ -515,16 +509,20 @@ spec:
                   memory: "1024Mi"
                   cpu: "2000m"
               volumeMounts:
-                - name: worlds-volume
+                - name: data-volume
                   mountPath: /server/worlds
+                  subPath: /worlds
+                - name: data-volume
+                  mountPath: /server/songs
+                  subPath: /songs
               ports:
                 - name: grpc
                   containerPort: 50051
                   protocol: TCP
           volumes:
-            - name: worlds-volume
+            - name: data-volume
               hostPath:
-                path: /data/worlds/
+                path: /data/
                 type: Directory
 ```
 

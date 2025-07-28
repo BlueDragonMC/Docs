@@ -32,7 +32,7 @@ The `/data/worlds` directory should be configured as documented [here](https://g
 ### Songs folder
 
 To play note block songs, add `.nbs` files created with [Note Block Studio](https://opennbs.org/) to a `songs` directory.
-These are mounted into the container at `/proxy/plugins/bluedragon-jukebox/songs/`.
+These are mounted into the container at `/server/songs/`.
 You should be able to see the songs by typing `/play` in-game.
 
 ## Running
@@ -97,7 +97,6 @@ git clone https://github.com/BlueDragonMC/Komodo
 cd Komodo
 docker build -t bluedragonmc/komodo:latest .
 docker run -d \
-  -v /data/songs:/proxy/plugins/bluedragon-jukebox/songs/ \
   -e PUFFIN_VELOCITY_SECRET=<your velocity secret> \
   --net bluedragon-network \
   bluedragonmc/komodo:latest
@@ -116,6 +115,7 @@ cd Server
 docker build -t bluedragonmc/server:latest .
 docker run \
   -v /data/worlds:/data/worlds \
+  -v /data/songs:/data/songs \
   -v ./games:/server/games \
   -e BLUEDRAGON_QUEUE_TYPE=IPC \
   -e BLUEDRAGON_MONGO_CONNECTION_STRING=mongodb://mongo:27017 \
