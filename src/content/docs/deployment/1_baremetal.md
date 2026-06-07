@@ -114,12 +114,9 @@ PUFFIN_PROXY_GRPC_PORT=50053
 PUFFIN_INSTANCE_START_PERIOD_MS=5000
 ```
 
-In addition, it reads configuration from the following files:
+In addition, it reads configuration from the [Worlds folder](#common-configuration) in `/data/worlds`.
 
-- [Buffer config](/reference/buffer-config) - `/service/config/buffer-config.properties`
-- [Worlds folder](#common-configuration) - `/data/worlds`
-
-These must be present for Puffin to work properly.
+This folder must be present for Puffin to work properly.
 
 :::caution
 Running Puffin outside of a Docker container is not recommended. If you run into any issues, please [open an issue](https://github.com/BlueDragonMC/Puffin/issues/new) or let us know on [Discord](https://bluedragonmc.com/discord).

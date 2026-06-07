@@ -22,7 +22,6 @@ Before you run BlueDragon's Docker containers, you must have:
 
 - A world folder (in `/data/worlds`)
 - A songs folder (in `/data/songs`, optional)
-- A `buffer-config.properties` file
 - A `proxy-config.properties` file
 
 ### World folder
@@ -79,7 +78,6 @@ cd Puffin
 docker build -t bluedragonmc/puffin:latest .
 docker run -d \
   -v /data/worlds:/data/worlds \
-  -v buffer-config.properties:/service/config/buffer-config.properties \
   -e PUFFIN_DEV_MODE=true \
   -e PUFFIN_WORLD_FOLDER=/data/worlds \
   -e PUFFIN_MONGO_CONNECTION_STRING=mongodb://mongo:27017 \
