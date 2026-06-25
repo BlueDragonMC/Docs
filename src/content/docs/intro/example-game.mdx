@@ -38,7 +38,7 @@ There are only two requirements for a game's main class:
 Here is an example main class from our ExampleGame project:
 
 ```kotlin
-class ExampleGame(mapName: String) : Game(name = "ExampleGame", mapName = mapName) {
+class ExampleGame(data: GameData) : Game(data) {
 
     override fun initialize() {
         use(VoidDeathModule(threshold = 0.0))
@@ -47,7 +47,7 @@ class ExampleGame(mapName: String) : Game(name = "ExampleGame", mapName = mapNam
             myModuleInstance.sayHello()
         }
         use(WinModule())
-        use(AnvilFileMapProviderModule(Paths.get("worlds/$name/$mapName")))
+        use(MapProviderModule(data.mapSource))
         use(SharedInstanceModule())
 
         handleEvent<PlayerChatEvent> { event ->
@@ -62,7 +62,7 @@ class ExampleGame(mapName: String) : Game(name = "ExampleGame", mapName = mapNam
             eventNode.addListener(PlayerSpawnEvent::class.java) { event ->
                 event.player.sendMessage(Component.text("Hello, world!", NamedTextColor.AQUA))
             }
-            
+
             eventNode.addListener(PlayerStartSneakingEvent::class.java) { event ->
                 parent.getModule<WinModule>().declareWinner(event.player)
             }
@@ -80,23 +80,14 @@ class ExampleGame(mapName: String) : Game(name = "ExampleGame", mapName = mapNam
 ## Let's break this down!
 
 ### The class declaration
+
 ```kotlin
-class ExampleGame(mapName: String) 
-  : Game(name = "ExampleGame", mapName = mapName) {
+class ExampleGame(data: GameData)
+  : Game(data) {
 ```
 
 Every game needs to extend BlueDragon's `Game` class.
-When overriding the constructor, we recommend keeping the game name (the `name` constructor parameter) constant.
-
-Your constructor is called in different ways depending on the number of parameters it accepts:
-
-| # of Parameters Accepted | Roles of Constructor Parameters |
-| ------------------------ | ------------------------------- |
-| 0                        | Called with no parameters.      |
-| 1                        | Map name                        |
-| 2                        | Map name, Game mode             |
-
-*This logic can be found [here](https://github.com/BlueDragonMC/Server/blob/0f15339656e3755447afcd05bad50d9408399d86/src/main/kotlin/com/bluedragonmc/server/queue/GameLoader.kt#L62-L66).*
+The `GameData` object is provided by the queue and contains the name, game mode, and information about the selected map.
 
 The game mode can be any arbitrary string. The Game implementation can use the game mode string to change various game mechanics.
 
@@ -135,14 +126,14 @@ You can register additional modules in this callback as well, and callbacks can 
 ### Loading maps
 
 ```kotlin
-use(AnvilFileMapProviderModule(Paths.get("worlds/$name/$mapName")))
+use(MapProviderModule(data.mapSource))
 use(SharedInstanceModule())
 ```
 
 Loading maps, just like everything else, is delegated to a module.
 
-- The [AnvilFileMapProviderModule](/modules/anvilfilemapprovidermodule/) loads the map into an [InstanceContainer](https://wiki.minestom.net/world/instances#instancecontainer) and prevents loading the map multiple times into memory.
-- The [SharedInstanceModule](/modules/sharedinstancemodule/) uses the `InstanceContainer` created in the `AnvilFileMapProviderModule` to create [SharedInstance](https://wiki.minestom.net/world/instances#sharedinstance)s with the same world content. This allows the map to only be loaded once while keeping players and entities separated.
+- The [MapProviderModule](/modules/mapprovidermodule/) loads the map into an [InstanceContainer](https://minestom.net/docs/world/instances#instancecontainer) and prevents loading the map multiple times into memory.
+- The [SharedInstanceModule](/modules/sharedinstancemodule/) uses the `InstanceContainer` created in the `MapProviderModule` to create [SharedInstance](https://minestom.net/docs/world/instances#sharedinstance)s with the same world content. This allows the map to only be loaded once while keeping players and entities separated.
 
 ### Creating a game module
 
@@ -154,7 +145,7 @@ class MyModule : GameModule() {
         eventNode.addListener(PlayerSpawnEvent::class.java) { event ->
             event.player.sendMessage(Component.text("Hello, world!", NamedTextColor.AQUA))
         }
-        
+
         eventNode.addListener(PlayerStartSneakingEvent::class.java) { event ->
             parent.getModule<WinModule>().declareWinner(event.player)
         }
