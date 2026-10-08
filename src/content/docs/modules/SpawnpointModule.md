@@ -8,9 +8,9 @@ title: SpawnpointModule
 ### Public Methods
 #### `initialize`
 ```kotlin
-fun initialize(game: Game)
+fun initialize(module: SpawnpointModule)
 ```
-Called when the spawnpoint module is loaded by the given `game`.
+Called when the spawnpoint module is loaded, giving the provider a chance to read the module's configuration.
 
 #### `getSpawnpoint`
 ```kotlin

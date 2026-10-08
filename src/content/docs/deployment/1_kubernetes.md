@@ -51,7 +51,7 @@ When running on Kubernetes, BlueDragon uses [Agones](https://agones.dev/) to orc
 
 ```sh
 kubectl create namespace agones-system
-kubectl apply --server-side -f https://raw.githubusercontent.com/googleforgames/agones/release-1.38.0/install/yaml/install.yaml
+kubectl apply --server-side -f https://raw.githubusercontent.com/agones-dev/agones/release-1.59.0/install/yaml/install.yaml
 ```
 
 You can also install it via [Helm](https://helm.sh/) by running:
@@ -82,7 +82,7 @@ metadata:
 spec:
   members: 1
   type: ReplicaSet
-  version: "6.0.5"
+  version: "8.0.4"
   security:
     authentication:
       modes: ["SCRAM"]
@@ -250,7 +250,7 @@ spec:
         - name: worlds-volume
           hostPath:
             path: /data/worlds/
-            type: Directory
+            type: DirectoryOrCreate
 ---
 apiVersion: v1
 kind: Service
@@ -266,6 +266,14 @@ spec:
       name: grpc
       port: 50051
       targetPort: 50051
+    - protocol: TCP
+      name: ws
+      port: 8080
+      targetPort: 8080
+    - protocol: TCP
+      name: map-service
+      port: 8082
+      targetPort: 8082
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -405,7 +413,7 @@ metadata:
   name: proxy-config
 data:
   proxy-config.properties: |
-    motd.line_1.text=<bold><gradient:#4EB2F4:#3336f4>BlueDragon</gradient></bold> <gray>[<green>1.20.1<gray>]
+    motd.line_1.text=<bold><gradient:#4EB2F4:#3336f4>BlueDragon</gradient></bold> <gray>[<green>26.3<gray>]
     motd.line_1.center=true
     motd.line_2.text=
     motd.line_2.center=true
@@ -442,9 +450,9 @@ spec:
         spec:
           containers:
             - name: server
-              # This image should be based on bluedragonmc/server,
-              # but should also include your minigame JARs.
-              image: <your registry url>/bluedragonmc/server:latest
+              # This image should be based on the image built in the
+              # "Building Container Images" guide, and should include your minigame JARs.
+              image: <your registry url>/bluedragonmc/server-full:latest
               env:
                 - name: PUFFIN_VELOCITY_SECRET
                   valueFrom:
@@ -481,7 +489,7 @@ spec:
             - name: data-volume
               hostPath:
                 path: /data/
-                type: Directory
+                type: DirectoryOrCreate
 ```
 
 Replace `<your registry url>` with your Docker registry, and apply the YAML to your cluster.
@@ -500,7 +508,7 @@ You should be able to connect to the server on port `30000`.
 If the port is not forwarded, then you can temporarily use `kubectl` as a proxy:
 
 ```sh
-kubectl port-forward svc/proxy 30000:30000
+kubectl port-forward svc/proxy 30000:25565
 ```
 
 Then, connect to the server on `localhost:30000`.

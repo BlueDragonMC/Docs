@@ -34,14 +34,33 @@ declareWinner(team: TeamModule.Team)
 - `LAST_PLAYER_ALIVE`: When there is exactly one player in the game who is not a spectator, they will be declared the winner. Suitable for solo deathmatch games like BlueDragon's WackyMaze. [SpectatorModule](../spectatormodule/) is required for this win condition to work.
 - `LAST_TEAM_ALIVE`: When there is exactly one team in the game that has at least one player who is not a spectator, that team will be declared the winner. Suitable for team deathmatch games like BlueDragon's SkyWars. [SpectatorModule](../spectatormodule/) and [TeamModule](../teammodule/) are both required for this win condition to work.
 
-Regardless of the win condition chosen, the `declareWinner` method will always end the game immediately.
+Regardless of the win condition chosen, the win celebration waits 5 seconds before ending the game.
+
+## Scores and Rankings
+
+When the game ends, `WinModule` announces the top three competitors. How they are ranked is controlled by the `ranking` parameter (which defaults to `AUTOMATIC`), and can use survival order, reported scores, or nothing at all.
+
+To rank by score, report scores as the game progresses:
+
+```kotlin
+use(WinModule(winCondition = WinModule.WinCondition.MANUAL, scoreThreshold = 10.0))
+// ...
+getModule<WinModule>().reportScore(player, 5.0)
+```
+
+- `reportScore(competitor, value)` records a competitor's current score.
+- `reportElimination(competitor)` records that a competitor was eliminated. Later eliminations rank better.
+- `getStandings()` returns the current standings, ordered from best to worst.
+- If `scoreThreshold` is set, the game is automatically won once a competitor reaches it.
+
+Both `reportScore` and `reportElimination` accept a `Player`, a `TeamModule.Team`, or a `Competitor` directly. The `tieWindow` parameter controls how close together two events must be to count as a tie.
 
 ## Usage
 
 Import the module:
 
 ```kotlin
-import com.bluedragonmc.server.module.minigame.WinModule
+import com.bluedragonmc.server.module.minigame.win.WinModule
 ```
 
 Use the module in your game's `initialize` function:

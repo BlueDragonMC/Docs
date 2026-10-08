@@ -51,20 +51,20 @@ class ExampleGame(data: GameData) : Game(data) {
         use(SharedInstanceModule())
 
         handleEvent<PlayerChatEvent> { event ->
-            event.player.exp += 10
+            event.player.sendMessage(Component.text("Thanks for chatting!", NamedTextColor.AQUA))
         }
     }
 
     @DependsOn(WinModule::class)
     class MyModule : GameModule() {
 
-        override fun initialize(parent: Game, eventNode: EventNode<Event>) {
+        override fun initialize(parent: ModuleHolder, eventNode: EventNode<Event>) {
             eventNode.addListener(PlayerSpawnEvent::class.java) { event ->
                 event.player.sendMessage(Component.text("Hello, world!", NamedTextColor.AQUA))
             }
 
-            eventNode.addListener(PlayerStartSneakingEvent::class.java) { event ->
-                parent.getModule<WinModule>().declareWinner(event.player)
+            eventNode.addListener(PlayerStartDiggingEvent::class.java) { event ->
+                getModule<WinModule>().declareWinner(event.player)
             }
         }
 
@@ -118,7 +118,7 @@ If a module has dependencies, calling `use` may not initialize it right away.
 Trying to get an instance of a module immediately after usage is not considered safe, since the module
 may be waiting for its dependencies to load (and therefore hasn't registered itself yet).
 
-Instead, use the callback option in the second parameter of the `use` method.
+Instead, pass a callback to the `use` method.
 When the module is registered, the instance of the module will be passed to the callback.
 
 You can register additional modules in this callback as well, and callbacks can be nested multiple times if necessary.
@@ -168,7 +168,7 @@ However, for soft dependencies, if the dependency is not registered by the time 
 
 Every module gets its own EventNode, which is scoped to the game. All events that pass through this EventNode must be related to a player in the game, an instance that this game owns, or the game itself.
 
-_The only exception to this is the ServerTickMonitorEvent. See [the source code](https://github.com/BlueDragonMC/Server/blob/b05b09ad229ccf85da20130510c9c1cdf90bbeed/common/src/main/kotlin/com/bluedragonmc/server/Game.kt#L93-L100) for details._
+_The only exception to this is the ServerTickMonitorEvent. See [the source code](https://github.com/BlueDragonMC/Server/blob/main/common/src/main/kotlin/com/bluedragonmc/server/GameEventBus.kt) for details._
 
 #### Unregistering Modules
 

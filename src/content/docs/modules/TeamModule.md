@@ -9,7 +9,7 @@ title: TeamModule
 If the `autoTeams` parameter is `true`, `TeamModule` will automatically generate teams when `GameStartEvent` is called. There are two strategies, set with the `autoTeamMode` parameter:
 
 - `PLAYER_COUNT`: Generate as many teams as possible with a specific number of players on each team. Fill each team before starting the next team. `autoTeamCount` controls the number of players on each team.
-- `TEAM_COUNT`: Generate a specific number of teams with as many players as possible. Use a round-robin approach to distribute players evenly. `autoTeamCount` controls the number of teams.
+- `TEAM_COUNT`: Generate a specific number of teams and distribute players between them as evenly as possible. `autoTeamCount` controls the number of teams.
 
 Auto-generated teams are assigned names and colors in sequential order based on the following list:
 
@@ -34,12 +34,11 @@ Auto-generated teams are assigned names and colors in sequential order based on 
 
 ## Custom Teams
 
-If the `autoTeams` parameter is `false`, it will be up to the game developer to decide how and when teams are assigned. Teams should be added to the `teams` list in the `TeamModule` instance. Here is a simplified example from HueHunters:
+If the `autoTeams` parameter is `false`, it will be up to the game developer to decide how and when teams are assigned. Create teams with `TeamModule.addTeam`. Here is a simplified example from HueHunters:
 
 ```kotlin
 val hidersTeam = teamModule.addTeam(
     name = Component.text("Hiders", NamedTextColor.GREEN),
-    players = mutableListOf(),
     allowFriendlyFire = false,
     nameTagVisibility = NameTagVisibility.HIDE_FOR_OTHER_TEAMS
 )

@@ -2,7 +2,7 @@
 title: DoorsModule
 ---
 
-`DoorsModule` reimplements the vanilla behavior for interacting with doors. Interacting with an open door will cause it to close for everyone on the server, and interacting with a closed door will cause it to open for everyone on the server. All types of wooden doors and trapdoors are supported. Iron doors do not open or close upon interaction.
+`DoorsModule` reimplements the vanilla behavior for interacting with doors. Interacting with an open door will cause it to close for everyone on the server, and interacting with a closed door will cause it to open for everyone on the server. Wooden and copper doors and trapdoors are supported. Iron doors do not open or close upon interaction.
 
 ## Usage
 

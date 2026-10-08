@@ -24,9 +24,10 @@ Here is a full list of recorders included with BlueDragon's common library:
 It's also easy to record custom statistics using your own recorder. As a simple example, the `PLAYER_KILLS` recorder is defined like this:
 
 ```kotlin
-val PLAYER_KILLS = StatisticsModule.EventStatisticRecorder(PlayerKillPlayerEvent::class.java) { game, event ->
-    // See the "Saving Stats" section for other ways to record data
-    incrementStatistic(event.attacker, getStatPrefix(game) + "_kills")
+val PLAYER_KILLS = StatisticsModule.EventStatisticRecorder(PlayerKillPlayerEvent::class.java) { event ->
+    // `this` is the StatisticsModule that loaded the recorder.
+    // See the "Saving Stats" section for other ways to record data.
+    incrementStatistic(event.attacker, "game_${data.name.lowercase()}_kills")
 }
 ```
 
@@ -69,21 +70,20 @@ recordStatisticIfLower(player: Player, key: String, newValue: Double, successCal
 recordStatisticIfGreater(player: Player, key: String, newValue: Double, successCallback: Runnable? = null)
 ```
 
-By convention, keys for game-specific statistics start with `game_<game name>_`. You can easily create an accurate prefix using the helper method:
+By convention, keys for game-specific statistics start with `game_<game name>_`, for example:
 ```kotlin
-// `game` is a reference to a Game object
-val kills_key = getStatPrefix(game) + "_wins" // "game_wackymaze_wins"
+val kills_key = "game_" + data.name.lowercase() + "_wins" // "game_wackymaze_wins"
 ```
 
 ## Ranking
-`StatisticsModule` also includes a function to retrieve the best players for a given statistic, ranked in order. Note that this is a blocking operation.
+`StatisticsModule` also includes a function to retrieve the best players for a given statistic, ranked in order. It is a suspend function, so call it from a coroutine:
 ```kotlin
-// OrderBy is an enum included in MongoDB's API
-// The last parameter tells it to retrieve a maximum of 10 entries
-val mostKills = getModule<StatisticsModule>().rankPlayersByStatistic("game_wackymaze_wins", OrderBy.DESC, 10)
+// OrderBy is an enum in StatisticsModule
+// The last parameter is the maximum number of entries to retrieve
+val mostKills = StatisticsModule.rankPlayersByStatistic("game_wackymaze_wins", OrderBy.DESC, 10)
 var i = 1
-for (pair in mostKills.entries) {
-    println("${pair.key.username} is #${i++} for WackyMaze wins")
+for ((playerDocument, value) in mostKills) {
+    println("${playerDocument.username} is #${i++} for WackyMaze wins with $value")
 }
 // ex4 is #1 for WackyMaze wins
 // wsad_ is #2 for WackyMaze wins

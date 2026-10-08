@@ -11,5 +11,5 @@ import com.bluedragonmc.server.module.gameplay.MaxHealthModule
 Use the module in your game's `initialize` function:
 ```kotlin
 // sets the max health of all players to 2.0, which is equal to 1 heart
-use(MaxHealthModule(maxHealth = 2f))
+use(MaxHealthModule(maxHealth = 2.0))
 ```

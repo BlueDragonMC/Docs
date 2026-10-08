@@ -18,6 +18,8 @@ use(ItemDropModule(dropBlocksOnBreak = true, dropAllOnDeath = true))
 
 If `dropBlocksOnBreak` is true, an item entity will spawn whenever a player breaks a block. If `dropAllOnDeath` is true, a player's entire inventory will be dropped when they die.
 
+By default, `dropBlocksOnBreak` is `true` and `dropAllOnDeath` is `false`.
+
 ## See Also
 - If you're looking to prevent players from removing items from their inventory, use [InventoryPermissionsModule](../inventorypermissionsmodule)
 - If you're looking to allow players to pick up items from the ground, use [ItemPickupModule](../itempickupmodule)

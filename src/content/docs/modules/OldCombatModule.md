@@ -1,7 +1,7 @@
 ---
 title: OldCombatModule
 ---
-`OldCombatModule` is a reimplementation of Minecraft combat features. It handles damage and knockback similar to vanilla Minecraft. It does not include most of the newer 1.9+ combat mechanics, such as shields and the attack cooldown. However, it does include the increased axe damage found in newer versions.
+`OldCombatModule` is a reimplementation of Minecraft combat features. It handles damage and knockback similar to vanilla Minecraft. It does not include most of the newer 1.9+ combat mechanics, such as shields and the attack cooldown.
 
 ## Parameters
 - `allowDamage`: Set to `false` to make all hits deal no damage.

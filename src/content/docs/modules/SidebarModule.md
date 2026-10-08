@@ -24,7 +24,7 @@ That binding looks like this:
 `SidebarModule` exposes a number of helper methods inside the binding block, including:
 
 - `getSpacer()`: always returns a component that can be used as an empty line. `Component.empty()` won't work more than once because every line must be unique.
-- `getStatusSection()`: returns a component showing the pre-game state (server starting, waiting, starting), with spacers before and after. If the game is ingame or ending, the function returns a single spacer.
+- `getStatusSection()`: returns a list of components showing the pre-game state (server starting, waiting, starting), with spacers before and after. If the game is ingame or ending, the function returns a single spacer.
 
 The `bind` method returns a reference to the new scoreboard binding. You can use `binding.update()` to refresh the sidebar at any time. The sidebar is automatically updated when the game state changes.
 

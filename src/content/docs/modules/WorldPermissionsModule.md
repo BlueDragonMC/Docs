@@ -9,12 +9,13 @@ Two module parameters have an effect on players' abilities to break blocks.
 - If `allowBreakMap` is `false`, players will not be able to break blocks that are included with the map (`PlayerBlockBreakEvent` will be cancelled). Any player-placed blocks will still be breakable as long as `allowBlockBreak` is not `false`.
 
 ## Block Placing
-Two module parameters have an effect on players' abilities to place blocks.
+One module parameter affects players' abilities to place blocks.
 - If `allowBlockPlace` is `false`, players will not be able to place any blocks (`PlayerBlockPlaceEvent` will be cancelled).
-- If `allowBlockInteract` is `false`, players will not be able to place any blocks (`PlayerBlockInteractEvent` will be cancelled). 
+- Players can never place a block inside a non-air block (`PlayerBlockPlaceEvent` will be cancelled), regardless of `allowBlockPlace`.
 
 ## Block Interacting
 - If `allowBlockInteract` is `false`, players will not be able to interact with any blocks (`PlayerBlockInteractEvent` will be cancelled).
+- Denying `allowBlockInteract` will also prevent players from placing blocks, even if `allowBlockPlace` is `true`.
 
 ## Block Exceptions
 The module has an `exceptions` parameter, which is a list of blocks that will be completely ignored by the module. This means the module will not prevent players from placing, breaking, or interacting with any block on the exceptions list. BlueDragon uses this feature to allow beds to be broken in BedWars, even though the rest of the map cannot be removed.
@@ -22,7 +23,7 @@ The module has an `exceptions` parameter, which is a list of blocks that will be
 ## Usage
 Import the module:
 ```kotlin
-import com.bluedragonmc.server.module.gameplay.gameplay.WorldPermissionsModule
+import com.bluedragonmc.server.module.gameplay.WorldPermissionsModule
 ```
 Use the module in your game's `initialize` function:
 ```kotlin

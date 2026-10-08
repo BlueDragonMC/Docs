@@ -12,7 +12,7 @@ A `Menu` is a reusable object representing an inventory-based menu. Menus can be
 guiModule.createMenu(
     title = Component.text("My Menu"),
     inventoryType = InventoryType.CHEST_6_ROW,
-    // if false, each player who opens the menu will get their own set of items
+    // if true, each player who opens the menu will get their own set of items
     isPerPlayer = true,
     // if false, clicking an item in the menu while in spectator mode will have no effect
     allowSpectatorClicks = true,

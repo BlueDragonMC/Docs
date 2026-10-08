@@ -42,15 +42,16 @@ Learn more about Gradle subprojects [here](https://docs.gradle.org/current/userg
 
    repositories {
        mavenCentral()
-       maven(url = "https://jitpack.io")
+       maven(url = "https://reposilite.bluedragonmc.com/releases")
    }
 
    dependencies {
        // `libs.<name>` comes from the version catalog we set up earlier.
        // See the "Version Catalogs" section of this guide for more information.
-       implementation(libs.server) // The BlueDragon core `Server` library, which provides a runtime and some common game modules
-       implementation(libs.bundles.configurate) // Sponge's `Configurate` library, which provides a configuration loader and some common (de)serializers
-       implementation(libs.minestom) // Include Minestom to compile against
+       // Use compileOnly for libraries that the Server already provides at runtime.
+       compileOnly(libs.server) // The BlueDragon core `Server` library, which provides a runtime and some common game modules
+       compileOnly(libs.bundles.configurate) // Sponge's `Configurate` library, which provides a configuration loader and some common (de)serializers
+       compileOnly(libs.minestom) // Include Minestom to compile against
    }
 
    tasks.getByName<Test>("test") { // Optional
@@ -74,7 +75,7 @@ Learn more about Gradle subprojects [here](https://docs.gradle.org/current/userg
 5. Include your subproject in your main project's build step. To do this, add the following to your root project's `settings.gradle.kts`:
    ```kotlin
    // settings.gradle.kts
-   includeBuild(":<your project name>")
+   include(":<your project name>")
    // Replace <your project name> with the name of the directory you created in Step 1.
    // Make sure to keep the colon (:)
    ```

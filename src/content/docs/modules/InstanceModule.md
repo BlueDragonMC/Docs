@@ -35,3 +35,19 @@ abstract fun ownsInstance(instance: Instance): Boolean
 ```
 
 Returns `true` if this module "owns" the instance. Modules should own an instance if they created it, and ownership should be released when the instance is no longer needed. Instances with no modules that declare ownership of them may be cleaned up at any time.
+
+### `getOwnedInstances`
+
+```kotlin
+fun getOwnedInstances(): List<Instance>
+```
+
+Returns every instance owned by this module.
+
+### `getInstance`
+
+```kotlin
+open fun getInstance(): Instance
+```
+
+Returns the single instance owned by this module. If the module owns multiple instances, an error is thrown.

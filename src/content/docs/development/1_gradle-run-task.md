@@ -22,9 +22,9 @@ tasks.register("copyJars", Copy::class) {
     subprojects.forEach { subproject ->
         if (subproject.name == "testing" || subproject.name == "common") return@forEach // Exclude the `testing` and `common` projects
         dependsOn(subproject.tasks.build) // Ensure this task runs after the subproject builds
-        from(subproject.buildDir.path + "/libs/" + subproject.name + "-1.0-SNAPSHOT.jar")
+        from("${subproject.layout.buildDirectory.get()}/libs/${subproject.name}-1.0-SNAPSHOT.jar")
     }
-    into("${buildDir}/all-jars")
+    into("${layout.buildDirectory.get()}/all-jars")
 }
 
 // After the whole project is built, run the task we just created to copy the JARs
@@ -44,10 +44,12 @@ This assumes you have cloned the [BlueDragonMC/Server](https://github.com/BlueDr
 
 ```kotlin
 // build.gradle.kts
+import org.gradle.internal.jvm.Jvm
+
 // For development: copy build game JARs into the `run` folder
 tasks.register("copyDev", Copy::class) {
     dependsOn("copyJars")
-    from("${buildDir}/all-jars")
+    from("${layout.buildDirectory.get()}/all-jars")
     into("${projectDir}/run/games/")
 }
 
@@ -60,7 +62,9 @@ tasks.register("buildServerDev", Exec::class) {
 // For development: copy the `Server` project artifact to the `run` folder
 tasks.register("copyServerDev", Copy::class) {
     dependsOn("buildServerDev")
-    from("${projectDir}/../Server/build/libs/Server-1.0-SNAPSHOT-all.jar")
+    from("${projectDir}/../Server/build/libs/") {
+        include("*-all.jar")
+    }
     into("${projectDir}/run")
     rename { "server.jar" }
 }
@@ -78,11 +82,11 @@ tasks.register("runDev", Exec::class) {
     dependsOn(tasks["copyServerDev"])
     dependsOn(tasks["copyDev"])
     workingDir = File(projectDir, "run")
-    commandLine = listOf("java", "-jar", "${projectDir}/run/server.jar")
+    commandLine = listOf(Jvm.current().javaExecutable.path, "-jar", "${projectDir}/run/server.jar")
 }
 ```
 
-Then, whenever you want to start a dev server, you can run `gradle runDev` or add it as an IntelliJ [run configuration](https://www.jetbrains.com/help/idea/run-debug-configuration.html).
+Then, whenever you want to start a dev server, you can run `./gradlew runDev` or add it as an IntelliJ [run configuration](https://www.jetbrains.com/help/idea/run-debug-configuration.html).
 
 ### Using the prebuilt `Server` project
 
@@ -92,7 +96,7 @@ If you want to use the prebuilt `Server` project instead of cloning it locally, 
 2. Remove the `dependsOn` call for `copyServerDev` in the `runDev` task definition.
 3. In the `cleanRunFolder` task definition, remove `"${projectDir}/run/server.jar"` from the `delete` call.
 4. Copy a compiled [BlueDragonMC/Server](https://github.com/BlueDragonMC/Server/) JAR into the `run` directory in your project. Rename it to `server.jar`.
-5. You can now run `gradle runDev` to start a dev server using a precompiled BlueDragonMC/Server JAR!
+5. You can now run `./gradlew runDev` to start a dev server using a precompiled BlueDragonMC/Server JAR!
 
 ### Runtime requirements
 
@@ -101,6 +105,4 @@ When you run the development server, you will need to start up two external serv
 1. **MongoDB** for storing player data and permissions
 2. **LuckPerms** for querying and updating player permissions
 
-The easiest way to do this is with Docker. Follow [this guide](/deployment/docker#mongodb) to start them up, and make sure they are running when you use the `runDev` Gradle task. If not, the development server will fail to start.
-
-If you do not have any permissions, follow [this guide](/deployment/docker#permissions) to give them to yourself.
+The [Development Environment Setup](/guides/dev-env) guide explains how to start them and give yourself permissions. Make sure they are running when you use the `runDev` Gradle task, or the development server will fail to start.

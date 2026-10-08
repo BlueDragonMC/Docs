@@ -2,7 +2,7 @@
 title: MapProviderModule
 ---
 
-`MapProviderModule` provides an [`InstanceContainer`](https://wiki.minestom.net/world/instances#instancecontainer) for [instance modules](../instancemodule) to clone.
+`MapProviderModule` provides an [`InstanceContainer`](https://wiki.minestom.net/world/instances#instancecontainer) for [instance modules](../instancemodule) to use.
 
 ## Usage
 

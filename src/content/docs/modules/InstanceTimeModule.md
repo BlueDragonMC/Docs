@@ -7,6 +7,7 @@ title: InstanceTimeModule
 ## Dependencies
 This module depends on the following modules:
 - [ConfigModule](../configmodule/)
+- [InstanceModule](../instancemodule/)
 
 ## Usage
 Import the module:
