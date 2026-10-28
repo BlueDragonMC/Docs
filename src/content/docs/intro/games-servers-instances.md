@@ -36,7 +36,7 @@ It is the Server's responsibility to clean up old games.
 
 ### Server IDs
 
-In a production environment, servers each have their own IDs. Kubernetes assigns each pod a name and exposes it through the `HOSTNAME` environment variable, which the server uses as its ID. These IDs conform to the pattern `<fleetName>-xxxxx-xxxxx` and match the pod IDs that Kubernetes assigns.
+In a production environment, servers each have their own IDs. Kubernetes assigns each pod a name and exposes it through the `HOSTNAME` environment variable, which the server uses as its ID. These IDs are the pod names assigned by the `server` Deployment (for example, `server-7d8f9c6b5-abcde`).
 
 If `HOSTNAME` is not set (for example, in development), the server generates a random ID in the form `dev-xxxxx-xxxxx`.
 

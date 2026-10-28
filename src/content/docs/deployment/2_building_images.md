@@ -46,7 +46,7 @@ docker build --build-context=server=../Server . -t <your registry url>/bluedrago
 docker push <your registry url>/bluedragonmc/server-full:latest
 ```
 
-Finally, you can start containers or an Agones Fleet using this image, which will have your games preinstalled.
+Finally, you can start containers or the `server` Deployment using this image, which will have your games preinstalled.
 
 :::note
 This Dockerfile example assumes your project has a Gradle configuration similar to the one in [this guide](/development/gradle-run-task#copy-jars-to-a-central-location), where the JARs are copied to the `all-jars` directory after the project is built. If not, you can replace the `COPY --from=build-games` line with something like this:

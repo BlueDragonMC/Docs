@@ -12,7 +12,7 @@ or contact us on [Discord](https://bluedragonmc.com/discord).
 This guide will show you how to deploy BlueDragon using Kubernetes.
 
 :::note
-Kubernetes is the recommended way to deploy BlueDragon in a production environment. With a Kubernetes deployment, you will have [Agones](https://agones.dev/), which allows you to perform rolling game server updates without kicking players, and [Puffin](https://github.com/BlueDragonMC/Puffin), which coordinates with your game servers and ensures that an appropriate number of games are running at all times.
+Kubernetes is the recommended way to deploy BlueDragon in a production environment. Game servers run in a Kubernetes Deployment, and [Puffin](https://github.com/BlueDragonMC/Puffin) coordinates with them to keep an appropriate number of games running. Rolling updates and scale-downs drain game servers gracefully without kicking players.
 :::
 
 ## Prerequisites
@@ -44,23 +44,6 @@ If you're using `minikube`, see their [official documentation](https://minikube.
 
 You can also create a registry outside of your cluster and configure it for use within the cluster.
 For more information, see [the official documentation](https://docs.docker.com/registry/).
-
-## Install Agones
-
-When running on Kubernetes, BlueDragon uses [Agones](https://agones.dev/) to orchestrate game servers. To [install Agones](https://agones.dev/site/docs/installation/install-agones/), run the following commands:
-
-```sh
-kubectl create namespace agones-system
-kubectl apply --server-side -f https://raw.githubusercontent.com/agones-dev/agones/release-1.59.0/install/yaml/install.yaml
-```
-
-You can also install it via [Helm](https://helm.sh/) by running:
-
-```sh
-helm repo add agones https://agones.dev/chart/stable
-helm repo update
-helm install agones --namespace agones-system --create-namespace agones/agones
-```
 
 ## Deploy MongoDB
 
@@ -204,7 +187,7 @@ This folder should contain one folder per game, and each of those should contain
 For more information, see the [Worlds Folder](/reference/worlds-folder/) guide.
 :::
 
-Apply this manifest to your cluster to install Puffin and give it the necessary permissions to watch Kubernetes and Agones resources:
+Apply this manifest to your cluster to install Puffin and give it the necessary permissions to watch game server pods and the game server Deployment:
 
 ```yaml
 apiVersion: apps/v1
@@ -280,7 +263,7 @@ kind: ServiceAccount
 metadata:
   name: puffin-service-account
 ---
-# Allow Puffin to get, list, and watch pods and Agones resources
+# Allow Puffin to get, list, and watch pods and game server Deployments
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
@@ -297,10 +280,9 @@ rules:
       - list
       - watch
   - apiGroups:
-      - "agones.dev"
+      - "apps"
     resources:
-      - gameservers
-      - fleets
+      - deployments
     verbs:
       - get
       - list
@@ -351,20 +333,42 @@ spec:
     matchLabels:
       app: proxy
   replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  # A proxy can remain up for up to two hours while its players drain.
+  progressDeadlineSeconds: 21600
   template:
     metadata:
       labels:
         app: proxy
     spec:
+      # Two-hour player-facing countdown plus a 90-second shutdown buffer.
+      terminationGracePeriodSeconds: 7290
       containers:
         - name: proxy
           image: <your registry url>/bluedragonmc/komodo:latest
           ports:
-            - containerPort: 25565
+            - name: minecraft
+              containerPort: 25565
+              protocol: TCP
+            - name: health
+              containerPort: 8081
+              protocol: TCP
           volumeMounts:
             - name: config-volume
               mountPath: /proxy/config/
           env:
+            - name: KOMODO_HEALTH_PORT
+              value: "8081"
+            - name: KOMODO_HEALTH_TIMEOUT_MS
+              value: "1000"
+            - name: KOMODO_SHUTDOWN_COUNTDOWN_SECONDS
+              value: "7200"
+            - name: KOMODO_DRAIN_QUIESCENCE_MS
+              value: "15000"
             - name: PUFFIN_VELOCITY_SECRET
               valueFrom:
                 secretKeyRef:
@@ -381,6 +385,32 @@ spec:
                   optional: false
             - name: LUCKPERMS_DATA_DATABASE
               value: "luckperms"
+          startupProbe:
+            httpGet:
+              path: /ready
+              port: health
+            periodSeconds: 2
+            failureThreshold: 300
+            timeoutSeconds: 2
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: health
+            periodSeconds: 2
+            failureThreshold: 2
+            timeoutSeconds: 1
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: health
+            periodSeconds: 5
+            failureThreshold: 6
+            timeoutSeconds: 2
+          lifecycle:
+            preStop:
+              httpGet:
+                path: /drain
+                port: health
       volumes:
         - name: config-volume
           configMap:
@@ -421,83 +451,137 @@ data:
 
 Replace `<your registry url>` with your Docker registry, and apply the YAML to your cluster.
 
-## Deploy Minecraft Server Fleet
+## Deploy Game Servers
 
 :::note
 This configuration assumes that your games are copied in to your container image.
 For more information, see [this guide](/deployment/building-images).
 :::
 
+Game servers run in a `Deployment` named `server`. Puffin discovers the pods by the
+`app=server` label, so keep the Deployment name and label unless you also change Puffin's
+`PUFFIN_GAMESERVER_DEPLOYMENT_NAME` and `PUFFIN_GAMESERVER_LABEL_SELECTOR` settings.
+
 ```yaml
-apiVersion: "agones.dev/v1"
-kind: Fleet
+apiVersion: apps/v1
+kind: Deployment
 metadata:
   name: server
+  labels:
+    app: server
 spec:
   replicas: 2
+  selector:
+    matchLabels:
+      app: server
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  # A draining server can stay up for up to two hours while players drain.
+  progressDeadlineSeconds: 21600
   template:
+    metadata:
+      labels:
+        app: server
     spec:
-      ports:
-        - name: minecraft
-          containerPort: 25565
-          protocol: TCP
-      health:
-        disabled: false
-        initialDelaySeconds: 30
-        periodSeconds: 5
-        failureThreshold: 5
-      template:
-        spec:
-          containers:
-            - name: server
-              # This image should be based on the image built in the
-              # "Building Container Images" guide, and should include your minigame JARs.
-              image: <your registry url>/bluedragonmc/server-full:latest
-              env:
-                - name: PUFFIN_VELOCITY_SECRET
-                  valueFrom:
-                    secretKeyRef:
-                      name: proxy-forwarding-secret
-                      key: secret
-                      optional: false
-                - name: BLUEDRAGON_MONGO_CONNECTION_STRING
-                  valueFrom:
-                    secretKeyRef:
-                      name: mongodb-instance-admin-bluedragon
-                      key: connectionString.standard
-                      optional: false
-              resources:
-                requests:
-                  memory: "1024Mi"
-                  # Agones takes 30m for its sidecar container, so in total, the pod requests 1/2 of a CPU.
-                  cpu: "470m"
-                limits:
-                  memory: "1024Mi"
-                  cpu: "2000m"
-              volumeMounts:
-                - name: data-volume
-                  mountPath: /data/worlds
-                  subPath: /worlds
-                - name: data-volume
-                  mountPath: /server/songs
-                  subPath: /songs
-              ports:
-                - name: grpc
-                  containerPort: 50051
-                  protocol: TCP
-          volumes:
+      # Two-hour player-facing countdown plus a 90-second shutdown buffer.
+      terminationGracePeriodSeconds: 7290
+      containers:
+        - name: server
+          # This image should be based on the image built in the
+          # "Building Container Images" guide, and should include your minigame JARs.
+          image: <your registry url>/bluedragonmc/server-full:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: minecraft
+              containerPort: 25565
+              protocol: TCP
+            - name: grpc
+              containerPort: 50051
+              protocol: TCP
+            - name: health
+              containerPort: 8081
+              protocol: TCP
+          env:
+            - name: BLUEDRAGON_SERVER_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: BLUEDRAGON_HEALTH_PORT
+              value: "8081"
+            - name: BLUEDRAGON_SHUTDOWN_COUNTDOWN_SECONDS
+              value: "7200"
+            - name: BLUEDRAGON_TICK_TIMEOUT_MS
+              value: "100"
+            - name: BLUEDRAGON_DRAIN_QUIESCENCE_MS
+              value: "15000"
+            - name: PUFFIN_VELOCITY_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: proxy-forwarding-secret
+                  key: secret
+                  optional: false
+            - name: BLUEDRAGON_MONGO_CONNECTION_STRING
+              valueFrom:
+                secretKeyRef:
+                  name: mongodb-instance-admin-bluedragon
+                  key: connectionString.standard
+                  optional: false
+          startupProbe:
+            httpGet:
+              path: /ready
+              port: health
+            periodSeconds: 2
+            failureThreshold: 300
+            timeoutSeconds: 2
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: health
+            periodSeconds: 2
+            failureThreshold: 2
+            timeoutSeconds: 1
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: health
+            periodSeconds: 5
+            failureThreshold: 6
+            timeoutSeconds: 2
+          lifecycle:
+            preStop:
+              httpGet:
+                path: /drain
+                port: health
+          resources:
+            requests:
+              memory: "1024Mi"
+              cpu: "500m"
+            limits:
+              memory: "1024Mi"
+              cpu: "2000m"
+          volumeMounts:
             - name: data-volume
-              hostPath:
-                path: /data/
-                type: DirectoryOrCreate
+              mountPath: /data/worlds
+              subPath: /worlds
+            - name: data-volume
+              mountPath: /server/songs
+              subPath: /songs
+      volumes:
+        - name: data-volume
+          hostPath:
+            path: /data/
+            type: DirectoryOrCreate
 ```
 
 Replace `<your registry url>` with your Docker registry, and apply the YAML to your cluster.
 
-You can scale the Fleet of game servers by running:
+You can scale the game server Deployment by running:
 
 ```sh
-kubectl scale fleet server --replicas=10 # 10 is the number of game server instances you want to run
+kubectl scale deployment server --replicas=10 # 10 is the number of game server instances you want to run
 ```
 
 ## That's It!

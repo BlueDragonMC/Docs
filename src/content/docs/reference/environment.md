@@ -14,22 +14,25 @@ The mode determines the default values for several of the variables below, so it
 
 ## Environment Variable Reference
 
-| Environment variable                        | Defaults                                                                  | Description                                                                                                                       |
-|---------------------------------------------|---------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------|
-| `BLUEDRAGON_ENV_TYPE`                       | `DEV` if `/server` does not exist, otherwise `PROD`                       | Overrides how the server determines whether it is in development or production mode.                                              |
-| `BLUEDRAGON_QUEUE_TYPE`                     | **Dev**: `TEST`<br>**Prod**: `IPC`                                        | Use "IPC" to connect to Puffin for queueing, or "TEST" for a fully-local/single-instance queue                                    |
-| `BLUEDRAGON_MONGO_CONNECTION_STRING`        | **Dev**: `mongodb://localhost:27017`<br>**Prod**: `mongodb://mongo:27017` | The connection string that resolves to a MongoDB instance                                                                         |
-| `BLUEDRAGON_PUFFIN_HOSTNAME`                | **Dev**: `localhost`<br>**Prod**: `puffin`                                | The hostname that resolves to a Puffin instance                                                                                   |
-| `BLUEDRAGON_PUFFIN_PORT`                    | 50051                                                                     | The port of Puffin's gRPC server.                                                                                                 |
-| `BLUEDRAGON_LUCKPERMS_HOSTNAME`             | **Dev**: `http://localhost:8080`<br>**Prod**: `http://luckperms:8080`     | The hostname that resolves to a [standalone LuckPerms](https://luckperms.net/) instance                                           |
-| `BLUEDRAGON_DEFAULT_GAME`                   | `Lobby`                                                                   | The game to automatically create on startup. Typically used to immediately initialize a lobby on each game server.                |
-| `BLUEDRAGON_AGONES_DISABLED`                | _Not set_                                                                 | If this environment variable is present with any value, Agones integration will be disabled.                                      |
-| `BLUEDRAGON_AGONES_HEALTHCHECK_INTERVAL_MS` | 10000                                                                     | The amount of time between Agones healthcheck pings, in milliseconds.                                                             |
-| `BLUEDRAGON_AGONES_RESERVATION_TIME_MS`     | Twice the healthcheck interval                                            | The duration of each Agones server reservation, in milliseconds.                                                                  |
-| `PUFFIN_VELOCITY_SECRET`                    | _Not set_                                                                 | The Velocity modern forwarding secret. If not present, Velocity forwarding is disabled and Mojang authentication is used instead. |
-| `BLUEDRAGON_GRPC_SERVER_PORT`               | 50051                                                                     | The port to listen on for gRPC requests.                                                                                          |
-| `SERVER_INSTANCE_MIN_INACTIVE_TIME`         | 120000                                                                    | The amount of time an instance must be inactive before it is cleaned up, in milliseconds.                                         |
-| `SERVER_INSTANCE_CLEANUP_PERIOD`            | 10000                                                                     | The amount of time between instance cleanup tasks, in milliseconds.                                                               |
+| Environment variable                    | Defaults                                                                  | Description                                                                                                                       |
+|-----------------------------------------|---------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------|
+| `BLUEDRAGON_ENV_TYPE`                   | `DEV` if `/server` does not exist, otherwise `PROD`                       | Overrides how the server determines whether it is in development or production mode.                                              |
+| `BLUEDRAGON_QUEUE_TYPE`                 | **Dev**: `TEST`<br>**Prod**: `IPC`                                        | Use "IPC" to connect to Puffin for queueing, or "TEST" for a fully-local/single-instance queue                                    |
+| `BLUEDRAGON_MONGO_CONNECTION_STRING`    | **Dev**: `mongodb://localhost:27017`<br>**Prod**: `mongodb://mongo:27017` | The connection string that resolves to a MongoDB instance                                                                         |
+| `BLUEDRAGON_PUFFIN_HOSTNAME`            | **Dev**: `localhost`<br>**Prod**: `puffin`                                | The hostname that resolves to a Puffin instance                                                                                   |
+| `BLUEDRAGON_PUFFIN_PORT`                | 50051                                                                     | The port of Puffin's gRPC server.                                                                                                 |
+| `BLUEDRAGON_LUCKPERMS_HOSTNAME`         | **Dev**: `http://localhost:8080`<br>**Prod**: `http://luckperms:8080`     | The hostname that resolves to a [standalone LuckPerms](https://luckperms.net/) instance                                           |
+| `BLUEDRAGON_DEFAULT_GAME`               | `Lobby`                                                                   | The game to automatically create on startup. Typically used to immediately initialize a lobby on each game server.                |
+| `BLUEDRAGON_SERVER_NAME`                | The contents of the `HOSTNAME` variable, or a random dev name             | Overrides the server name. In Kubernetes this is normally set from `metadata.name`.                                               |
+| `BLUEDRAGON_HEALTH_PORT`                | 8081                                                                      | The port used for `/health`, `/ready`, and `/drain`.                                                                              |
+| `BLUEDRAGON_SHUTDOWN_COUNTDOWN_SECONDS` | 7200                                                                      | How long players have before a draining server stops, in seconds.                                                                 |
+| `BLUEDRAGON_TICK_TIMEOUT_MS`            | 100                                                                       | How long the server may go without a tick before it is considered unhealthy.                                                      |
+| `BLUEDRAGON_DRAIN_QUIESCENCE_MS`        | 15000                                                                     | How long a draining server must remain empty before stopping early.                                                               |
+| `BLUEDRAGON_LIFECYCLE_DISABLED`         | _Not set_                                                                 | If present, disables the lifecycle HTTP endpoints.                                                                                |
+| `PUFFIN_VELOCITY_SECRET`                | _Not set_                                                                 | The Velocity modern forwarding secret. If not present, Velocity forwarding is disabled and Mojang authentication is used instead. |
+| `BLUEDRAGON_GRPC_SERVER_PORT`           | 50051                                                                     | The port to listen on for gRPC requests.                                                                                          |
+| `SERVER_INSTANCE_MIN_INACTIVE_TIME`     | 120000                                                                    | The amount of time an instance must be inactive before it is cleaned up, in milliseconds.                                         |
+| `SERVER_INSTANCE_CLEANUP_PERIOD`        | 10000                                                                     | The amount of time between instance cleanup tasks, in milliseconds.                                                               |
 
 _[View ConfiguredEnvironment source code](https://github.com/BlueDragonMC/Server/blob/main/src/main/kotlin/com/bluedragonmc/server/queue/environments.kt) for more details about server environment configuration._
 
@@ -42,8 +45,8 @@ _[View ConfiguredEnvironment source code](https://github.com/BlueDragonMC/Server
 
 Every game server **must** have a unique name to interact properly with other services. The default [`ConfiguredEnvironment`](https://github.com/BlueDragonMC/Server/blob/main/src/main/kotlin/com/bluedragonmc/server/queue/environments.kt) goes through the following process for determining a server's name:
 
-1. If the `HOSTNAME` environment variable is set, its value will be used as the server name.
-2. If the server is in development mode _or_ Agones integration is disabled, a random name in the form `dev-xxxxx-xxxxx` will be created and used.
-3. If the server is in production mode _and_ Agones integration is enabled, a gRPC request will be sent to get the server name from the Agones [gRPC API](https://agones.dev/site/docs/guides/client-sdks/#gameserver).
+1. If `BLUEDRAGON_SERVER_NAME` is set, its value will be used as the server name.
+2. Otherwise, if the `HOSTNAME` environment variable is set, its value will be used. Kubernetes sets this to the pod name.
+3. Otherwise, a random name in the form `dev-xxxxx-xxxxx` will be created and used.
 
 The result is then cached for future lookups.
