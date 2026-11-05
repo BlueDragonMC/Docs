@@ -21,7 +21,7 @@ FROM docker.io/library/gradle:9.5.1-jdk25 AS build-server
 COPY --from=server . /work
 WORKDIR /work
 RUN --mount=type=cache,target=/home/gradle/.gradle \
-    /usr/bin/gradle --console=plain --stacktrace --no-daemon publishToMavenLocal
+    /usr/bin/gradle --console=plain --stacktrace --no-daemon check installThinDist publishToMavenLocal
 
 # Build your games against the freshly-built Server.
 FROM docker.io/library/gradle:9.5.1-jdk25 AS build-games
@@ -33,10 +33,11 @@ RUN --mount=type=cache,target=/home/gradle/.gradle \
 
 # Assemble the final image.
 FROM docker.io/library/eclipse-temurin:25-jre-alpine
-COPY --from=build-server /work/build/libs/Server-*-all.jar /server/server.jar
+COPY --from=build-server /work/build/thin-dist/lib /server/lib
+COPY --from=build-server /work/build/thin-dist/Server-*.jar /server/server.jar
 COPY --from=build-games /work/build/all-jars/*.jar /server/games/
 WORKDIR /server
-ENTRYPOINT ["java", "-jar", "server.jar"]
+ENTRYPOINT ["java", "-cp", "/server/server.jar:/server/lib/*", "com.bluedragonmc.server.ServerKt"]
 ```
 
 Then, you can build your project and push the image to your registry:

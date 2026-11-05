@@ -56,21 +56,29 @@ tasks.register("copyDev", Copy::class) {
 // For development: build the sibling `Server` project
 tasks.register("buildServerDev", Exec::class) {
     workingDir = File(projectDir.parent, "Server")
-    commandLine = listOf("../Server/gradlew", "build", "-x", "test")
+    commandLine = listOf("../Server/gradlew", "installThinDist", "-x", "test")
 }
 
-// For development: copy the `Server` project artifact to the `run` folder
+// For development: clear the copied Server libraries before refreshing them
+tasks.register("cleanServerDev", Delete::class) {
+    delete("${projectDir}/run/lib")
+}
+
+// For development: copy the `Server` project artifacts to the `run` folder
 tasks.register("copyServerDev", Copy::class) {
-    dependsOn("buildServerDev")
-    from("${projectDir}/../Server/build/libs/") {
-        include("*-all.jar")
+    dependsOn("buildServerDev", "cleanServerDev")
+    from(File(projectDir.parent, "Server/build/thin-dist")) {
+        include("Server-*.jar")
+        rename { "server.jar" }
+    }
+    from(File(projectDir.parent, "Server/build/thin-dist/lib")) {
+        into("lib")
     }
     into("${projectDir}/run")
-    rename { "server.jar" }
 }
 
 tasks.register("cleanRunFolder", Delete::class) {
-    delete("${projectDir}/run/games", "${projectDir}/run/server.jar")
+    delete("${projectDir}/run/games", "${projectDir}/run/server.jar", "${projectDir}/run/lib")
 }
 
 tasks.clean.configure {
@@ -82,7 +90,16 @@ tasks.register("runDev", Exec::class) {
     dependsOn(tasks["copyServerDev"])
     dependsOn(tasks["copyDev"])
     workingDir = File(projectDir, "run")
-    commandLine = listOf(Jvm.current().javaExecutable.path, "-jar", "${projectDir}/run/server.jar")
+    val serverClasspath = listOf(
+        "${projectDir}/run/server.jar",
+        "${projectDir}/run/lib/*",
+    ).joinToString(File.pathSeparator)
+    commandLine = listOf(
+        Jvm.current().javaExecutable.path,
+        "-cp",
+        serverClasspath,
+        "com.bluedragonmc.server.ServerKt",
+    )
 }
 ```
 
@@ -92,11 +109,11 @@ Then, whenever you want to start a dev server, you can run `./gradlew runDev` or
 
 If you want to use the prebuilt `Server` project instead of cloning it locally, take the code from the last section and make the following modifications:
 
-1. Delete the `buildServerDev` and `copyServerDev` task definitions
+1. Delete the `buildServerDev`, `cleanServerDev`, and `copyServerDev` task definitions
 2. Remove the `dependsOn` call for `copyServerDev` in the `runDev` task definition.
-3. In the `cleanRunFolder` task definition, remove `"${projectDir}/run/server.jar"` from the `delete` call.
-4. Copy a compiled [BlueDragonMC/Server](https://github.com/BlueDragonMC/Server/) JAR into the `run` directory in your project. Rename it to `server.jar`.
-5. You can now run `./gradlew runDev` to start a dev server using a precompiled BlueDragonMC/Server JAR!
+3. In the `cleanRunFolder` task definition, remove `"${projectDir}/run/server.jar"` and `"${projectDir}/run/lib"` from the `delete` call.
+4. Copy the [BlueDragonMC/Server](https://github.com/BlueDragonMC/Server/) artifacts into the `run` directory in your project. Put the `Server-*.jar` there as `server.jar`, and the `lib` directory next to it.
+5. You can now run `./gradlew runDev` to start a dev server using a precompiled BlueDragonMC/Server!
 
 ### Runtime requirements
 
