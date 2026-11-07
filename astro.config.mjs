@@ -18,10 +18,18 @@ export default defineConfig({
       editLink: {
         baseUrl: "https://github.com/BlueDragonMC/Docs/edit/main/",
       },
-      social: {
-        github: "https://github.com/BlueDragonMC",
-        discord: "https://bluedragonmc.com/discord",
-      },
+      social: [
+        {
+          icon: "github",
+          label: "GitHub",
+          href: "https://github.com/BlueDragonMC",
+        },
+        {
+          icon: "discord",
+          label: "Discord",
+          href: "https://bluedragonmc.com/discord",
+        },
+      ],
       lastUpdated: true,
       tableOfContents: {
         maxHeadingLevel: 4,
@@ -29,39 +37,27 @@ export default defineConfig({
       sidebar: [
         {
           label: "Introduction",
-          autogenerate: {
-            directory: "intro",
-          },
+          items: [{ autogenerate: { directory: "intro" } }],
         },
         {
           label: "Development",
-          autogenerate: {
-            directory: "development",
-          },
+          items: [{ autogenerate: { directory: "development" } }],
         },
         {
           label: "Guides",
-          autogenerate: {
-            directory: "guides",
-          },
+          items: [{ autogenerate: { directory: "guides" } }],
         },
         {
           label: "Game Modules",
-          autogenerate: {
-            directory: "modules",
-          },
+          items: [{ autogenerate: { directory: "modules" } }],
         },
         {
           label: "Reference",
-          autogenerate: {
-            directory: "reference",
-          },
+          items: [{ autogenerate: { directory: "reference" } }],
         },
         {
           label: "Deployment",
-          autogenerate: {
-            directory: "deployment",
-          },
+          items: [{ autogenerate: { directory: "deployment" } }],
         },
       ],
       plugins: [
@@ -73,10 +69,12 @@ export default defineConfig({
     }),
     robotsTxt(),
     createFaviconsIntegration({
-      appName: "BlueDragon Docs",
-      appShortName: "BlueDragon",
-      masterPicture: "./src/assets/logo.png",
-      path: "./favicons/",
+      name: "BlueDragon Docs",
+      short_name: "BlueDragon",
+      input: "./src/assets/logo.png",
+      output: {
+        assetsPrefix: "/favicons/",
+      },
     }),
   ],
 });
