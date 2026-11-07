@@ -219,6 +219,10 @@ spec:
                   name: mongodb-instance-admin-bluedragon
                   key: connectionString.standard
                   optional: false
+            - name: PUFFIN_TRANSFER_TTL_SECONDS
+              value: "60"
+            - name: PUFFIN_DESTINATION_TTL_SECONDS
+              value: "60"
           volumeMounts:
             - name: worlds-volume
               mountPath: /data/worlds
@@ -367,8 +371,14 @@ spec:
               value: "1000"
             - name: KOMODO_SHUTDOWN_COUNTDOWN_SECONDS
               value: "7200"
+            - name: KOMODO_COUNTDOWN_HIDDEN_SECONDS
+              value: "3600"
             - name: KOMODO_DRAIN_QUIESCENCE_MS
               value: "15000"
+            - name: KOMODO_TRANSFER_HOST
+              value: "bluedragonmc.com"
+            - name: KOMODO_TRANSFER_PORT
+              value: "25565"
             - name: PUFFIN_VELOCITY_SECRET
               valueFrom:
                 secretKeyRef:
@@ -513,10 +523,14 @@ spec:
               value: "8081"
             - name: BLUEDRAGON_SHUTDOWN_COUNTDOWN_SECONDS
               value: "7200"
+            - name: BLUEDRAGON_COUNTDOWN_HIDDEN_SECONDS
+              value: "3600"
             - name: BLUEDRAGON_TICK_TIMEOUT_MS
               value: "100"
             - name: BLUEDRAGON_DRAIN_QUIESCENCE_MS
               value: "15000"
+            - name: BLUEDRAGON_LOBBY_TRANSFER_TIMEOUT_MS
+              value: "30000"
             - name: PUFFIN_VELOCITY_SECRET
               valueFrom:
                 secretKeyRef:
